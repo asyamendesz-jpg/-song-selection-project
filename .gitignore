@@ -4,3 +4,4 @@ tmp
 backup
 .DS_Store
 *.local
+*.tsbuildinfo

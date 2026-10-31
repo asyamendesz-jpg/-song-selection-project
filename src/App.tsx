@@ -278,7 +278,7 @@ export default function App() {
           <h1>{COPY.title}</h1>
           <p className="lead">{COPY.lead}</p>
           <div className="hero-actions">
-            <button type="button" className="btn btn-primary" onClick={startQuiz}>
+            <button type="button" className="btn btn-primary" onClick={startQuiz} id="start-quiz">
               {COPY.start}
             </button>
             <p className="muted">{COPY.hint}</p>

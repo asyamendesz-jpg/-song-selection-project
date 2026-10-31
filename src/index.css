@@ -21,20 +21,25 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
+html {
   min-height: 100%;
-  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  min-height: 100%;
+  overflow-x: hidden;
   background:
     radial-gradient(1200px 500px at 10% -10%, #ebe4ff 0%, transparent 55%),
     radial-gradient(900px 400px at 100% 0%, #f3e9ff 0%, transparent 45%),
     var(--bg);
   color: var(--ink);
+}
+
+#root {
+  min-height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 button,
@@ -104,7 +109,9 @@ h2 {
   flex-direction: column;
   gap: 12px;
   margin-top: 28px;
-  align-items: flex-start;
+  align-items: stretch;
+  position: relative;
+  z-index: 2;
 }
 
 .btn {
@@ -115,6 +122,10 @@ h2 {
   font-weight: 700;
   cursor: pointer;
   min-height: 52px;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .btn:disabled {
@@ -192,6 +203,10 @@ h2 {
   min-height: 56px;
   white-space: normal;
   overflow-wrap: anywhere;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .option.is-selected,

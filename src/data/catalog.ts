@@ -1151,13 +1151,29 @@ export const CATALOG: Song[] = [
     language: "en",
     genres: ["pop"],
     moods: ["joyful", "energetic"],
-    version: "Сингл 2011, альбом Up All Night; студия One Direction",
+    version:
+      "Сингл 11 сентября 2011, альбом Up All Night; студия One Direction. Авторы: Savan Kotecha, Carl Falk, Rami Yacoub.",
     learningTasks: ["ровный ритм", "ясный текст"],
     infoSource: {
-      summary: "Дебютный сингл One Direction.",
-      urls: ["https://en.wikipedia.org/wiki/What_Makes_You_Beautiful"],
+      summary:
+        "Дебютный сингл One Direction. Полный текст студийной версии прочитан: комплимент внешности и неуверенность, без мата и сексуальных сцен. Предварительно 12plus из‑за романтического адресата, не «для всех возрастов».",
+      urls: [
+        "https://en.wikipedia.org/wiki/What_Makes_You_Beautiful",
+        "https://note-store.ru/notes/one-direction/what-makes-you-beautiful/piano-vocal/",
+      ],
     },
     editorialAge: age("12plus", "needsCheck"),
+    audienceHint: ["preteen", "teen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/one-direction/what-makes-you-beautiful/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0015793: отдельная вокальная строка со словами. Лицензия ООО «Национальное музыкальное издательство». Страницы PDF визуально не просмотрены.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+      }),
+    ],
     purposes: ["pleasure", "karaoke"],
   }),
   song({
@@ -1548,6 +1564,214 @@ export const CATALOG: Song[] = [
       ],
     },
     editorialAge: age("12plus"),
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "hametova-chiki-briki",
+    title: "Чики-брики",
+    artist: "Милана Хаметова",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["joyful", "energetic"],
+    version:
+      "Студийный трек, премьера на сцене «СуперЛайкШоу» СТС Kids 19 октября 2024. На странице минусовки указаны музыка А. Тамамяна и А. Маковской, слова С. Ивонина и А. Маковской — авторство сведено к этой карточке, не к нотному изданию.",
+    learningTasks: ["ритм", "ясный текст"],
+    infoSource: {
+      summary:
+        "Полный текст прочитан: считалка «чики-брики», пальцы, зайчик, без мата и романтики. Предварительно без возрастных ограничений по содержанию.",
+      urls: [
+        "https://www.starhit.ru/lifestyle/viki-show-betsy-milana-khametova-itogi-glavnogo-detskogo-sobytiya-oseni-5916897/",
+        "https://minusovochki.ru/minusovki/milana-hametova-chiki-briki",
+      ],
+    },
+    editorialAge: age("all", "needsCheck"),
+    audienceHint: ["preteen"],
+    purposes: ["pleasure", "karaoke"],
+  }),
+  song({
+    id: "betsy-sigma-boy",
+    title: "Сигма Бой",
+    artist: "Betsy feat. Мария Янковская",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["joyful", "energetic"],
+    version:
+      "Сингл 4 октября 2024, лейбл Rhymes Music. Исполняют Светлана Чертищева (Betsy) и Мария Янковская. Авторы: Михаил Чертищев и Серафим Сидорин (Мукка).",
+    learningTasks: ["ритм", "ясный текст"],
+    infoSource: {
+      summary:
+        "Полный текст студийной версии прочитан: танцы, интернет-сленг «сигма», желание, чтобы мальчик «добивался» и «был мой», без мата и сексуальных сцен. Предварительно 12plus из‑за романтического преследования, не слой 16plus.",
+      urls: [
+        "https://news.ru/show-business/sigma-boj-chto-za-pesnya-kto-poet-avtory-pochemu-populyarna",
+        "https://note-store.ru/notes/betsy-2/sigma-boy/piano-vocal/",
+      ],
+    },
+    editorialAge: age("12plus", "needsCheck"),
+    audienceHint: ["preteen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/betsy-2/sigma-boy/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0187112: отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+      }),
+    ],
+    purposes: ["pleasure", "karaoke"],
+  }),
+  song({
+    id: "swift-shake-it-off",
+    title: "Shake It Off",
+    artist: "Taylor Swift",
+    language: "en",
+    genres: ["pop"],
+    moods: ["joyful", "energetic"],
+    version:
+      "Сингл 19 августа 2014, альбом 1989; студия Taylor Swift / Max Martin / Shellback. Авторы: Taylor Swift, Max Martin, Karl Johan Shellback.",
+    learningTasks: ["ритм", "ровная мелодия"],
+    infoSource: {
+      summary:
+        "Полный текст студийной версии прочитан: сплетни, свидания, бывший с новой девушкой, призыв отряхнуться. Без мата и сексуальных сцен. Предварительно 12plus из‑за свиданий и «ex-man».",
+      urls: [
+        "https://en.wikipedia.org/wiki/Shake_It_Off",
+        "https://genius.com/Taylor-swift-shake-it-off-lyrics",
+        "https://note-store.ru/notes/taylor-swift/shake-it-off/piano-vocal/",
+      ],
+    },
+    editorialAge: age("12plus", "needsCheck"),
+    audienceHint: ["preteen", "teen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/taylor-swift/shake-it-off/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0014326: отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+      }),
+    ],
+    purposes: ["pleasure", "karaoke", "lessons"],
+  }),
+  song({
+    id: "perry-roar",
+    title: "Roar",
+    artist: "Katy Perry",
+    language: "en",
+    genres: ["pop"],
+    moods: ["energetic", "dramatic"],
+    version:
+      "Сингл 2013, альбом Prism. Авторы: Katy Perry (Katheryn Hudson), Max Martin, Bonnie McKee, Dr. Luke, Henry Walter.",
+    learningTasks: ["выразительность", "ритм"],
+    infoSource: {
+      summary:
+        "Полный текст студийной версии прочитан: выход из подавляющих отношений, «you held me down», метафора рыка. Без мата. Предварительно 12plus.",
+      urls: [
+        "https://en.wikipedia.org/wiki/Roar_(song)",
+        "https://note-store.ru/notes/katy-perry/roar/piano-vocal/",
+      ],
+    },
+    editorialAge: age("12plus", "needsCheck"),
+    audienceHint: ["preteen", "teen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/katy-perry/roar/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0014060, лицензия РАО: отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+      }),
+    ],
+    purposes: ["pleasure", "karaoke", "performance"],
+  }),
+  song({
+    id: "jepsen-call-me-maybe",
+    title: "Call Me Maybe",
+    artist: "Carly Rae Jepsen",
+    language: "en",
+    genres: ["pop"],
+    moods: ["joyful", "tender"],
+    version:
+      "Сингл 2011–2012, альбом Kiss. Авторы: Carly Rae Jepsen, Tavish Crowe, Josh Ramsay.",
+    learningTasks: ["ясный текст", "ровная мелодия"],
+    infoSource: {
+      summary:
+        "Полный текст студийной версии прочитан: внезапное влечение, просьба позвонить. Без мата и сексуальных сцен. Предварительно 12plus из‑за романтического адресата.",
+      urls: [
+        "https://en.wikipedia.org/wiki/Call_Me_Maybe",
+        "https://note-store.ru/notes/carly-rae-jepsen/call-me-maybe/piano-vocal/",
+      ],
+    },
+    editorialAge: age("12plus", "needsCheck"),
+    audienceHint: ["preteen", "teen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/carly-rae-jepsen/call-me-maybe/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0015266: отдельная вокальная строка со словами. Лицензия ООО «Национальное музыкальное издательство». Страницы PDF визуально не просмотрены.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+      }),
+    ],
+    purposes: ["pleasure", "karaoke"],
+  }),
+  song({
+    id: "isaeva-da-ri-da",
+    title: "Да-ри-да",
+    artist: "Софья Исаева",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["joyful", "tender"],
+    version:
+      "Титульное исполнение Софьи Исаевой; музыка Алексея Ольханского, слова Арины Лучиной. Текст с сайта авторов olhanskiy.ru.",
+    learningTasks: ["легато", "ясный текст"],
+    infoSource: {
+      summary:
+        "Полный текст прочитан: светлица, пряха, нить поколений, колокола, радость. Без мата и взрослой романтики. Предварительно без ограничений по содержанию. Автор предлагает ноты на той же странице; страницы нот не просмотрены, в выдачу вокала не включены.",
+      urls: ["https://olhanskiy.ru/songs/da-ri-da.html"],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["preteen"],
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "lazareva-drive",
+    title: "Мы выбираем драйв",
+    artist: "Мариника Лазарева",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["energetic", "joyful"],
+    version:
+      "Титульное исполнение Мариники Лазаревой; музыка Алексея Ольханского, слова Арины Лучиной при участии Ольханского. Текст с сайта авторов olhanskiy.ru.",
+    learningTasks: ["ритм", "выразительность"],
+    infoSource: {
+      summary:
+        "Полный текст прочитан: отказ от чужих правил, друзья, «территория риска», хейтеры в спам. Нет мата, алкоголя и сексуальных сцен. Предварительно без ограничений по содержанию. Ноты на сайте автора не просмотрены, в выдачу вокала не включены.",
+      urls: ["https://olhanskiy.ru/songs/drive.html"],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["preteen"],
+    purposes: ["pleasure", "performance", "karaoke"],
+  }),
+  song({
+    id: "kondratieva-bosikom",
+    title: "Босиком по небу",
+    artist: "Дарина Кондратьева",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["tender", "calm"],
+    version:
+      "Титульное исполнение Дарины Кондратьевой; музыка Алексея Ольханского, слова Никиты Дорофеева. Текст с сайта авторов olhanskiy.ru.",
+    learningTasks: ["легато", "выразительность"],
+    infoSource: {
+      summary:
+        "Полный текст прочитан: месяц, звёзды, колыбель, бег босиком по небу. Нет мата и любовной линии. Предварительно без ограничений по содержанию. Ноты на сайте автора не просмотрены, в выдачу вокала не включены.",
+      urls: ["https://olhanskiy.ru/songs/bosikom-po-nebu.html"],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["preteen"],
     purposes: ["pleasure", "lessons", "performance"],
   }),
 ];

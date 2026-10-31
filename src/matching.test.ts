@@ -60,7 +60,7 @@ describe("quiz flow", () => {
 
 describe("catalog honesty", () => {
   it("contains 68 real songs, Adele, and no fictional studio acts", () => {
-    expect(CATALOG).toHaveLength(68);
+    expect(CATALOG).toHaveLength(76);
     expect(CATALOG.some((song) => song.id === "adele-someone")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Учебная студия Подборщика")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Song Picker Studio")).toBe(true);
@@ -180,6 +180,32 @@ describe("catalog honesty", () => {
       song.sheetMusic.some((item) => item.access === "free" && item.kind === "vocal"),
     );
     expect(freeVocal.map((song) => song.id).sort()).toEqual(["alyabyev-solovey", "schubert-ave-maria"].sort());
+    const beautiful = CATALOG.find((song) => song.id === "onedirection-beautiful");
+    expect(beautiful?.sheetMusic[0]?.url).toContain("note-store.ru/notes/one-direction/what-makes-you-beautiful/piano-vocal");
+    expect(beautiful?.editorialAge.lyricAge).toBe("12plus");
+    expect(beautiful?.audienceHint).toEqual(["preteen", "teen"]);
+    expect(CATALOG.filter((song) => song.id === "onedirection-beautiful")).toHaveLength(1);
+    const preteenPilot = [
+      "hametova-chiki-briki",
+      "betsy-sigma-boy",
+      "swift-shake-it-off",
+      "perry-roar",
+      "jepsen-call-me-maybe",
+      "isaeva-da-ri-da",
+      "lazareva-drive",
+      "kondratieva-bosikom",
+    ];
+    for (const id of preteenPilot) {
+      const song = CATALOG.find((item) => item.id === id);
+      expect(song?.verification.status).toBe("unverified");
+      expect(song?.rangeLow).toBeNull();
+      expect(song?.genres).not.toContain("children");
+      expect(song?.audienceHint?.includes("preteen")).toBe(true);
+      expect(song?.sheetMusic.every((item) => item.visualCheck !== "pages-readable")).toBe(true);
+    }
+    expect(CATALOG.find((song) => song.id === "hametova-chiki-briki")?.editorialAge.lyricAge).toBe("all");
+    expect(CATALOG.find((song) => song.id === "betsy-sigma-boy")?.editorialAge.lyricAge).toBe("12plus");
+    expect(CATALOG.find((song) => song.id === "isaeva-da-ri-da")?.sheetMusic).toEqual([]);
   });
 });
 
@@ -661,5 +687,67 @@ describe("matching", () => {
     );
     expect(ruFolkAny.songs.map((item) => item.song.id)).toContain("prach-vo-pole-bereza");
     expect(ruFolkAny.songs.find((item) => item.song.id === "prach-vo-pole-bereza")?.sheets).toEqual([]);
+  });
+
+  it("keeps 11-year-old pop ideas without opening the whole 12plus layer", () => {
+    const anySheets = matchSongs(
+      base({
+        age: "11",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    const ids = anySheets.songs.map((item) => item.song.id);
+    expect(ids).toContain("hametova-chiki-briki");
+    expect(ids).toContain("isaeva-da-ri-da");
+    expect(ids).toContain("lazareva-drive");
+    expect(ids).toContain("kondratieva-bosikom");
+    expect(ids).toContain("shainsky-antoshka");
+    expect(ids).not.toContain("betsy-sigma-boy");
+    expect(ids).not.toContain("onedirection-beautiful");
+    expect(ids).not.toContain("swift-shake-it-off");
+    expect(ids).not.toContain("perry-roar");
+    expect(ids).not.toContain("jepsen-call-me-maybe");
+    expect(anySheets.songs.every((item) => item.song.editorialAge.lyricAge === "all")).toBe(true);
+
+    const vocal = matchSongs(
+      base({
+        age: "11",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "vocal",
+      }),
+    );
+    expect(vocal.songs.map((item) => item.song.id)).not.toContain("hametova-chiki-briki");
+    expect(vocal.songs.map((item) => item.song.id)).not.toContain("isaeva-da-ri-da");
+    expect(vocal.songs.every((item) => item.sheets.length > 0)).toBe(true);
+
+    const free = matchSongs(
+      base({
+        age: "11",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(free.songs).toHaveLength(0);
+
+    const twelve = matchSongs(
+      base({
+        age: "12",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        sheetFilter: "vocal",
+      }),
+    );
+    expect(twelve.songs.map((item) => item.song.id)).toContain("betsy-sigma-boy");
   });
 });

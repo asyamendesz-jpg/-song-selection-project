@@ -70,6 +70,9 @@ export type LyricAge = "all" | "12plus" | "16plus" | "18plus";
 
 export type LyricReview = "preliminary" | "needsCheck";
 
+/** Предполагаемая аудитория репертуара, не фильтр текста и не педагогическая оценка. */
+export type AudienceHint = "preschool" | "primary" | "preteen" | "teen" | "lateTeen" | "adult";
+
 export type OtherLanguageCode = "de" | "fr" | "ko" | "ro";
 
 export type VerificationStatus = "unverified" | "rangeChecked";
@@ -144,6 +147,8 @@ export interface Song {
   infoSource: SongInfoSource;
   sheetMusic: SheetMusicSource[];
   editorialAge: EditorialAge;
+  /** Мягкий ориентир «кому обычно интересно», не допуск по тексту. */
+  audienceHint?: AudienceHint[];
   verification: {
     status: VerificationStatus;
     source: string;

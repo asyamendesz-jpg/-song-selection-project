@@ -294,6 +294,33 @@ describe("Word export", () => {
     expect(anyRels).not.toContain("digitale-sammlungen.de");
   });
 
+  it("exports 11-year-old contemporary pop ideas without 12plus hits or fake free sheets", async () => {
+    const anySheets = matchSongs(
+      base({
+        age: "11",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(anySheets.songs.map((item) => item.song.id)).toContain("hametova-chiki-briki");
+    expect(anySheets.songs.map((item) => item.song.id)).not.toContain("betsy-sigma-boy");
+    const xml = zipEntry(await buildPlaylistDocxBuffer(anySheets, new Date(2026, 9, 31)), "word/document.xml");
+    const rels = zipEntry(
+      await buildPlaylistDocxBuffer(anySheets, new Date(2026, 9, 31)),
+      "word/_rels/document.xml.rels",
+    );
+    expect(xml).toContain("Чики-брики");
+    expect(xml).toContain("Да-ри-да");
+    expect(xml).toContain("Мы выбираем драйв");
+    expect(xml).toContain("Ссылка на ноты пока не добавлена");
+    expect(xml).not.toContain("Сигма Бой");
+    expect(xml).not.toContain("Shake It Off");
+    expect(rels).not.toContain("betsy-2/sigma-boy");
+  });
+
   it("puts every matched song into Word for counts 1, 5 and 6", async () => {
     const openAnswers = base({
       age: "30",

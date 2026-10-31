@@ -39,6 +39,8 @@ function sheet(
     kind?: SheetKind;
     format?: SheetFormat;
     registrationRequired?: boolean;
+    collectionPdfPage?: number;
+    collectionPrintPage?: number | string;
   },
 ): SheetMusicSource {
   return {
@@ -53,6 +55,8 @@ function sheet(
     versionNote: source.versionNote,
     scoring: source.scoring,
     access: source.access,
+    ...(source.collectionPdfPage != null ? { collectionPdfPage: source.collectionPdfPage } : {}),
+    ...(source.collectionPrintPage != null ? { collectionPrintPage: source.collectionPrintPage } : {}),
   };
 }
 
@@ -997,10 +1001,20 @@ export const CATALOG: Song[] = [
     editorialAge: age("12plus", "needsCheck"),
     sheetMusic: [
       sheet({
+        url: "https://www.mutopiaproject.org/ftp/SchubertF/D839/SchubertF-D839_AveMaria/SchubertF-D839_AveMaria-a4.pdf",
+        publisher: "Mutopia Project",
+        versionNote:
+          "Общественное достояние: набор по C.F. Peters, Band I. Голос и фортепиано, немецкий текст Шторка. Прямой PDF без покупки и без аккаунта. Не латинская Ave Maria и не фортепианное соло.",
+        scoring: "голос и фортепиано, со словами",
+        key: "B-flat major",
+        access: "free",
+        sameAsRecommended: true,
+      }),
+      sheet({
         url: "https://imslp.org/wiki/Ave_Maria,_D.839_(Schubert,_Franz)",
         publisher: "IMSLP",
         versionNote:
-          "Общественное достояние: страница произведения D.839, голос и фортепиано, немецкий текст Шторка. Не латинская Ave Maria и не обработка для хора.",
+          "Страница произведения D.839 открывается без оплаты. Исторические клавиры голос+фортепиано с немецким текстом помечены Public Domain. Скачивание PDF — после дисклеймера IMSLP, не покупка. Регистрация для этих файлов не обязательна.",
         scoring: "голос и фортепиано",
         key: "B-flat major",
         access: "free",
@@ -1479,5 +1493,72 @@ export const CATALOG: Song[] = [
     },
     editorialAge: age("12plus", "needsCheck"),
     purposes: ["pleasure", "lessons"],
+  }),
+  song({
+    id: "alyabyev-solovey",
+    title: "Соловей",
+    artist: "А. А. Алябьев",
+    language: "ru",
+    genres: ["classical"],
+    moods: ["tender"],
+    version:
+      "Романс А. А. Алябьева на стихи А. А. Дельвига; не народная песня. Проверенное издание: П. Юргенсон, 1901, высокий голос и фортепиано, русский и немецкий текст.",
+    learningTasks: ["легато", "выразительность"],
+    infoSource: {
+      summary: "Романс Алябьева «Соловей» на стихи Дельвига; историческое издание Юргенсона 1901 в публичном доступе.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/Соловей_(романс)",
+        "https://pbc.biaman.pl/Content/10241/PDF/s%C5%82owik.pdf",
+      ],
+    },
+    editorialAge: age("12plus"),
+    sheetMusic: [
+      sheet({
+        url: "https://pbc.biaman.pl/Content/10241/PDF/s%C5%82owik.pdf",
+        publisher: "Podlaska Biblioteka Cyfrowa / П. Юргенсон, 1901",
+        versionNote:
+          "Прямой PDF без покупки и без аккаунта: 6 сканов, голос и фортепиано, подтекстовка на русском и немецком. Отдельное издание, не сборник. Общественное достояние.",
+        scoring: "голос и фортепиано, со словами",
+        access: "free",
+        sameAsRecommended: true,
+      }),
+    ],
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "prach-vo-pole-bereza",
+    title: "Во поле берёза стояла",
+    artist: "русская народная, обработка И. Прача",
+    language: "ru",
+    genres: ["classical"],
+    moods: ["joyful"],
+    version:
+      "Сборник Н. А. Львова — И. Прача, 2-е изд., Санкт-Петербург, 1806, часть I, плясовые № 6; голос и фортепиано, русский текст. Не детская песня: в полном тексте насмешка над старым мужем («встань ты мой старой», помои, рогожка) рядом с куплетом про милого.",
+    learningTasks: ["ясный текст", "ритм"],
+    infoSource: {
+      summary:
+        "Первая печатная нотная фиксация — Львов–Прач. Полный текст издания 1806 прочитан: взрослая плясовая, не детский репертуар.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/Во_поле_берёза_стояла",
+        "https://ru.wikisource.org/wiki/Во_поле_берёза_стояла/Соболевский_II.1_(ВТ)",
+        "https://www.digitale-sammlungen.de/en/view/bsb11140706?page=138",
+      ],
+    },
+    editorialAge: age("12plus"),
+    sheetMusic: [
+      sheet({
+        url: "https://www.digitale-sammlungen.de/en/view/bsb11140706?page=138",
+        publisher: "Bayerische Staatsbibliothek / MDZ, Прач 1806",
+        versionNote:
+          "Бесплатный просмотрщик без регистрации: плясовая № 6, три нотоносца (вокал с русскими словами и фортепиано). Ноты — страница 138 цифрового экземпляра; полный текст той же пьесы — следующая страница, печатный номер 30. Часть II этого издания не использовалась.",
+        scoring: "голос и фортепиано, со словами",
+        access: "free",
+        format: "collection",
+        collectionPdfPage: 138,
+        collectionPrintPage: 30,
+        sameAsRecommended: true,
+      }),
+    ],
+    purposes: ["pleasure", "lessons", "performance"],
   }),
 ];

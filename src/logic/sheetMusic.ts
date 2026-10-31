@@ -46,6 +46,17 @@ export function sheetSite(source: SheetMusicSource): string {
 
 export function sheetLinkLabel(source: SheetMusicSource): string {
   if (source.kind === "instrumental") return "Инструментальное переложение";
+  if (source.access === "free" && source.format === "collection") {
+    const pdf = source.collectionPdfPage;
+    const print = source.collectionPrintPage;
+    if (pdf != null && print != null && String(print) !== String(pdf)) {
+      return `Открыть бесплатный сборник — страница ${pdf} PDF, печатная ${print}`;
+    }
+    if (pdf != null) {
+      return `Открыть бесплатный сборник — страница ${pdf}`;
+    }
+    return "Открыть бесплатный сборник";
+  }
   if (source.access === "free") return "Открыть бесплатные ноты";
   if (source.format === "collection") return "Купить сборник с этой песней";
   return "Купить ноты";

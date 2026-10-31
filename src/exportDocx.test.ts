@@ -230,6 +230,45 @@ describe("Word export", () => {
     expect(emptyXml).toContain("бесплатными вокальными нотами");
     expect(emptyXml).toContain("идеи репертуара");
     expect(emptyXml).toContain("автоматически не меняется");
+
+    const ruAdultFree = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["tender"],
+        purpose: "lessons",
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(ruAdultFree.songs.map((item) => item.song.id)).toEqual(["alyabyev-solovey"]);
+    const adultXml = zipEntry(await buildPlaylistDocxBuffer(ruAdultFree, new Date(2026, 9, 31)), "word/document.xml");
+    const adultRels = zipEntry(
+      await buildPlaylistDocxBuffer(ruAdultFree, new Date(2026, 9, 31)),
+      "word/_rels/document.xml.rels",
+    );
+    expect(adultXml).toContain("Открыть бесплатные ноты");
+    expect(adultXml).toContain("Соловей");
+    expect(adultRels).toContain("pbc.biaman.pl/Content/10241/PDF/");
+
+    const ruFolkFree = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["joyful"],
+        purpose: "lessons",
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(ruFolkFree.songs.map((item) => item.song.id)).toEqual(["prach-vo-pole-bereza"]);
+    const folkXml = zipEntry(await buildPlaylistDocxBuffer(ruFolkFree, new Date(2026, 9, 31)), "word/document.xml");
+    const folkRels = zipEntry(
+      await buildPlaylistDocxBuffer(ruFolkFree, new Date(2026, 9, 31)),
+      "word/_rels/document.xml.rels",
+    );
+    expect(folkXml).toContain("Открыть бесплатный сборник — страница 138 PDF, печатная 30");
+    expect(folkRels).toContain("digitale-sammlungen.de/en/view/bsb11140706?page=138");
   });
 
   it("puts every matched song into Word for counts 1, 5 and 6", async () => {

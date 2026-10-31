@@ -109,6 +109,10 @@ export interface SheetMusicSource {
   registrationRequired: boolean;
   checkedAt: string;
   sameAsRecommended: boolean;
+  /** Номер страницы в PDF или в цифровом просмотрщике сборника, только если проверен по файлу. */
+  collectionPdfPage?: number;
+  /** Печатный номер страницы, если он есть в издании и отличается от номера PDF. */
+  collectionPrintPage?: number | string;
 }
 
 export interface EditorialAge {

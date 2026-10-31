@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CATALOG } from "./data/catalog";
 import { resolveOtherLanguageCode } from "./data/languages";
 import { matchSongs, remainingSongCount, songsForScreen } from "./logic/matching";
+import { sheetLinkLabel } from "./logic/sheetMusic";
 import { INITIAL_ANSWERS, needsVoiceChange, parseAgeInput, stepsFor } from "./logic/quizFlow";
 import { toggleCapped, toggleExclusive } from "./logic/selection";
 import type { Answers } from "./types";
@@ -58,8 +59,8 @@ describe("quiz flow", () => {
 });
 
 describe("catalog honesty", () => {
-  it("contains 66 real songs, Adele, and no fictional studio acts", () => {
-    expect(CATALOG).toHaveLength(66);
+  it("contains 68 real songs, Adele, and no fictional studio acts", () => {
+    expect(CATALOG).toHaveLength(68);
     expect(CATALOG.some((song) => song.id === "adele-someone")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Учебная студия Подборщика")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Song Picker Studio")).toBe(true);
@@ -143,7 +144,11 @@ describe("catalog honesty", () => {
     expect(CATALOG.find((song) => song.id === "krylatov-daleko")?.sheetMusic).toHaveLength(2);
     expect(CATALOG.find((song) => song.id === "shainsky-oblaka")?.sheetMusic).toHaveLength(2);
     expect(CATALOG.some((song) => song.sheetMusic.length === 0)).toBe(true);
-    expect(CATALOG.find((song) => song.id === "schubert-ave-maria")?.sheetMusic[0]?.access).toBe("free");
+    const schubertSheets = CATALOG.find((song) => song.id === "schubert-ave-maria")?.sheetMusic ?? [];
+    expect(schubertSheets.every((source) => source.access === "free" && source.kind === "vocal")).toBe(true);
+    expect(schubertSheets.some((source) => source.url.includes("mutopiaproject.org") && source.url.endsWith(".pdf"))).toBe(
+      true,
+    );
     expect(CATALOG.every((song) => song.sheetMusic.every((item) => !/google\.[^/]+\/search/i.test(item.url)))).toBe(
       true,
     );
@@ -155,6 +160,30 @@ describe("catalog honesty", () => {
     expect(oblaka?.sheetMusic.some((item) => item.kind === "instrumental" && /piano-solo/.test(item.url))).toBe(true);
     expect(CATALOG.find((song) => song.id === "gladkov-solnyshke")?.sheetMusic[0]?.format).toBe("collection");
     expect(CATALOG.every((song) => song.sheetMusic.every((item) => item.registrationRequired === false))).toBe(true);
+    const alyabyev = CATALOG.find((song) => song.id === "alyabyev-solovey");
+    expect(alyabyev?.verification.status).toBe("unverified");
+    expect(alyabyev?.rangeLow).toBeNull();
+    expect(alyabyev?.sheetMusic).toHaveLength(1);
+    expect(alyabyev?.sheetMusic[0]?.access).toBe("free");
+    expect(alyabyev?.sheetMusic[0]?.kind).toBe("vocal");
+    expect(alyabyev?.sheetMusic[0]?.format).toBe("single");
+    expect(alyabyev?.sheetMusic[0]?.url).toBe("https://pbc.biaman.pl/Content/10241/PDF/s%C5%82owik.pdf");
+    expect(sheetLinkLabel(alyabyev!.sheetMusic[0]!)).toBe("Открыть бесплатные ноты");
+    const bereza = CATALOG.find((song) => song.id === "prach-vo-pole-bereza");
+    expect(bereza?.editorialAge.lyricAge).toBe("12plus");
+    expect(bereza?.genres).not.toContain("children");
+    expect(bereza?.sheetMusic[0]?.format).toBe("collection");
+    expect(bereza?.sheetMusic[0]?.collectionPdfPage).toBe(138);
+    expect(bereza?.sheetMusic[0]?.collectionPrintPage).toBe(30);
+    expect(sheetLinkLabel(bereza!.sheetMusic[0]!)).toBe(
+      "Открыть бесплатный сборник — страница 138 PDF, печатная 30",
+    );
+    const freeVocal = CATALOG.filter((song) =>
+      song.sheetMusic.some((item) => item.access === "free" && item.kind === "vocal"),
+    );
+    expect(freeVocal.map((song) => song.id).sort()).toEqual(
+      ["alyabyev-solovey", "prach-vo-pole-bereza", "schubert-ave-maria"].sort(),
+    );
   });
 });
 
@@ -557,8 +586,65 @@ describe("matching", () => {
         sheetFilter: "freeVocal",
       }),
     );
-    expect(freeAny.songs.map((item) => item.song.id)).toEqual(["schubert-ave-maria"]);
+    expect(freeAny.songs.map((item) => item.song.id)).toEqual([
+      "schubert-ave-maria",
+      "alyabyev-solovey",
+      "prach-vo-pole-bereza",
+    ]);
     expect(freeAny.songs[0]?.sheets.every((source) => source.access === "free" && source.kind === "vocal")).toBe(true);
+    expect(freeAny.songs[0]?.sheets[0]?.url).toContain("mutopiaproject.org");
+    expect(sheetLinkLabel(freeAny.songs[0]!.sheets[0]!)).toBe("Открыть бесплатные ноты");
     expect(freeAny.answers.some((line) => /бесплатными вокальными нотами/.test(line))).toBe(true);
+
+    const germanRomance = matchSongs(
+      base({
+        age: "28",
+        genres: ["classical"],
+        languages: ["other"],
+        otherLanguage: "немецкий",
+        moods: ["tender"],
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(germanRomance.songs.map((item) => item.song.id)).toEqual(["schubert-ave-maria"]);
+
+    const ruRomanceFree = matchSongs(
+      base({
+        age: "28",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["dramatic"],
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(ruRomanceFree.songs).toHaveLength(0);
+
+    const ruAdultFree = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["tender"],
+        purpose: "lessons",
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(ruAdultFree.songs.map((item) => item.song.id)).toEqual(["alyabyev-solovey"]);
+    expect(sheetLinkLabel(ruAdultFree.songs[0]!.sheets[0]!)).toBe("Открыть бесплатные ноты");
+
+    const ruFolkFree = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["joyful"],
+        purpose: "lessons",
+        sheetFilter: "freeVocal",
+      }),
+    );
+    expect(ruFolkFree.songs.map((item) => item.song.id)).toEqual(["prach-vo-pole-bereza"]);
+    expect(sheetLinkLabel(ruFolkFree.songs[0]!.sheets[0]!)).toBe(
+      "Открыть бесплатный сборник — страница 138 PDF, печатная 30",
+    );
   });
 });

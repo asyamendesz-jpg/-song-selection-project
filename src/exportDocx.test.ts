@@ -261,14 +261,36 @@ describe("Word export", () => {
         sheetFilter: "freeVocal",
       }),
     );
-    expect(ruFolkFree.songs.map((item) => item.song.id)).toEqual(["prach-vo-pole-bereza"]);
+    expect(ruFolkFree.songs.map((item) => item.song.id)).toEqual([]);
     const folkXml = zipEntry(await buildPlaylistDocxBuffer(ruFolkFree, new Date(2026, 9, 31)), "word/document.xml");
     const folkRels = zipEntry(
       await buildPlaylistDocxBuffer(ruFolkFree, new Date(2026, 9, 31)),
       "word/_rels/document.xml.rels",
     );
-    expect(folkXml).toContain("Открыть бесплатный сборник — страница 138 PDF, печатная 30");
-    expect(folkRels).toContain("digitale-sammlungen.de/en/view/bsb11140706?page=138");
+    expect(folkXml).not.toContain("Во поле берёза стояла");
+    expect(folkXml).not.toContain("Открыть бесплатный сборник");
+    expect(folkRels).not.toContain("digitale-sammlungen.de");
+
+    const ruFolkAny = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["joyful"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(ruFolkAny.songs.map((item) => item.song.id)).toContain("prach-vo-pole-bereza");
+    const anyXml = zipEntry(await buildPlaylistDocxBuffer(ruFolkAny, new Date(2026, 9, 31)), "word/document.xml");
+    const anyRels = zipEntry(
+      await buildPlaylistDocxBuffer(ruFolkAny, new Date(2026, 9, 31)),
+      "word/_rels/document.xml.rels",
+    );
+    expect(anyXml).toContain("Во поле берёза стояла");
+    expect(anyXml).toContain("Ссылка на ноты пока не добавлена");
+    expect(anyXml).not.toContain("Открыть бесплатный сборник");
+    expect(anyRels).not.toContain("digitale-sammlungen.de");
   });
 
   it("puts every matched song into Word for counts 1, 5 and 6", async () => {

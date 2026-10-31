@@ -113,6 +113,11 @@ export interface SheetMusicSource {
   collectionPdfPage?: number;
   /** Печатный номер страницы, если он есть в издании и отличается от номера PDF. */
   collectionPrintPage?: number | string;
+  /**
+   * Только если страницы этого издания реально просмотрены и ноты читаются.
+   * Не ставить по факту открытия PDF или по каталожной карточке.
+   */
+  visualCheck?: "pages-readable";
 }
 
 export interface EditorialAge {

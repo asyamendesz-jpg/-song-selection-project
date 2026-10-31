@@ -32,6 +32,7 @@ function song(
 
 const SHEET_CHECKED = "2026-10-31";
 
+/** visualCheck: "pages-readable" только после просмотра страниц этой песни, не после открытия PDF. */
 function sheet(
   source: Omit<SheetMusicSource, "checkedAt" | "sameAsRecommended" | "key" | "kind" | "format" | "registrationRequired"> & {
     key?: string | null;
@@ -41,6 +42,7 @@ function sheet(
     registrationRequired?: boolean;
     collectionPdfPage?: number;
     collectionPrintPage?: number | string;
+    visualCheck?: "pages-readable";
   },
 ): SheetMusicSource {
   return {
@@ -57,6 +59,7 @@ function sheet(
     access: source.access,
     ...(source.collectionPdfPage != null ? { collectionPdfPage: source.collectionPdfPage } : {}),
     ...(source.collectionPrintPage != null ? { collectionPrintPage: source.collectionPrintPage } : {}),
+    ...(source.visualCheck ? { visualCheck: source.visualCheck } : {}),
   };
 }
 
@@ -1521,6 +1524,7 @@ export const CATALOG: Song[] = [
         scoring: "голос и фортепиано, со словами",
         access: "free",
         sameAsRecommended: true,
+        visualCheck: "pages-readable",
       }),
     ],
     purposes: ["pleasure", "lessons", "performance"],
@@ -1533,32 +1537,17 @@ export const CATALOG: Song[] = [
     genres: ["classical"],
     moods: ["joyful"],
     version:
-      "Сборник Н. А. Львова — И. Прача, 2-е изд., Санкт-Петербург, 1806, часть I, плясовые № 6; голос и фортепиано, русский текст. Не детская песня: в полном тексте насмешка над старым мужем («встань ты мой старой», помои, рогожка) рядом с куплетом про милого.",
+      "Русская народная плясовая; историческая фиксация — Львов–Прач. Не детская песня: полный текст насмехается над старым мужем. Скан Прача 1806 (MDZ) снят из выдачи: нотные знаки местами исчезли. Другое бесплатное вокальное издание со страниц этой песни визуально проверить не удалось.",
     learningTasks: ["ясный текст", "ритм"],
     infoSource: {
       summary:
-        "Первая печатная нотная фиксация — Львов–Прач. Полный текст издания 1806 прочитан: взрослая плясовая, не детский репертуар.",
+        "Полный текст плясовой взрослой. Бесплатный скан Прача 1806 признан непригодным для чтения нот; замена без визуальной проверки страниц не добавлялась.",
       urls: [
         "https://ru.wikipedia.org/wiki/Во_поле_берёза_стояла",
         "https://ru.wikisource.org/wiki/Во_поле_берёза_стояла/Соболевский_II.1_(ВТ)",
-        "https://www.digitale-sammlungen.de/en/view/bsb11140706?page=138",
       ],
     },
     editorialAge: age("12plus"),
-    sheetMusic: [
-      sheet({
-        url: "https://www.digitale-sammlungen.de/en/view/bsb11140706?page=138",
-        publisher: "Bayerische Staatsbibliothek / MDZ, Прач 1806",
-        versionNote:
-          "Бесплатный просмотрщик без регистрации: плясовая № 6, три нотоносца (вокал с русскими словами и фортепиано). Ноты — страница 138 цифрового экземпляра; полный текст той же пьесы — следующая страница, печатный номер 30. Часть II этого издания не использовалась.",
-        scoring: "голос и фортепиано, со словами",
-        access: "free",
-        format: "collection",
-        collectionPdfPage: 138,
-        collectionPrintPage: 30,
-        sameAsRecommended: true,
-      }),
-    ],
     purposes: ["pleasure", "lessons", "performance"],
   }),
 ];

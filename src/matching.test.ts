@@ -168,22 +168,17 @@ describe("catalog honesty", () => {
     expect(alyabyev?.sheetMusic[0]?.kind).toBe("vocal");
     expect(alyabyev?.sheetMusic[0]?.format).toBe("single");
     expect(alyabyev?.sheetMusic[0]?.url).toBe("https://pbc.biaman.pl/Content/10241/PDF/s%C5%82owik.pdf");
+    expect(alyabyev?.sheetMusic[0]?.visualCheck).toBe("pages-readable");
     expect(sheetLinkLabel(alyabyev!.sheetMusic[0]!)).toBe("Открыть бесплатные ноты");
     const bereza = CATALOG.find((song) => song.id === "prach-vo-pole-bereza");
     expect(bereza?.editorialAge.lyricAge).toBe("12plus");
     expect(bereza?.genres).not.toContain("children");
-    expect(bereza?.sheetMusic[0]?.format).toBe("collection");
-    expect(bereza?.sheetMusic[0]?.collectionPdfPage).toBe(138);
-    expect(bereza?.sheetMusic[0]?.collectionPrintPage).toBe(30);
-    expect(sheetLinkLabel(bereza!.sheetMusic[0]!)).toBe(
-      "Открыть бесплатный сборник — страница 138 PDF, печатная 30",
-    );
+    expect(bereza?.sheetMusic).toEqual([]);
+    expect(bereza?.infoSource.urls.some((url) => url.includes("digitale-sammlungen.de"))).toBe(false);
     const freeVocal = CATALOG.filter((song) =>
       song.sheetMusic.some((item) => item.access === "free" && item.kind === "vocal"),
     );
-    expect(freeVocal.map((song) => song.id).sort()).toEqual(
-      ["alyabyev-solovey", "prach-vo-pole-bereza", "schubert-ave-maria"].sort(),
-    );
+    expect(freeVocal.map((song) => song.id).sort()).toEqual(["alyabyev-solovey", "schubert-ave-maria"].sort());
   });
 });
 
@@ -586,11 +581,7 @@ describe("matching", () => {
         sheetFilter: "freeVocal",
       }),
     );
-    expect(freeAny.songs.map((item) => item.song.id)).toEqual([
-      "schubert-ave-maria",
-      "alyabyev-solovey",
-      "prach-vo-pole-bereza",
-    ]);
+    expect(freeAny.songs.map((item) => item.song.id)).toEqual(["schubert-ave-maria", "alyabyev-solovey"]);
     expect(freeAny.songs[0]?.sheets.every((source) => source.access === "free" && source.kind === "vocal")).toBe(true);
     expect(freeAny.songs[0]?.sheets[0]?.url).toContain("mutopiaproject.org");
     expect(sheetLinkLabel(freeAny.songs[0]!.sheets[0]!)).toBe("Открыть бесплатные ноты");
@@ -642,9 +633,32 @@ describe("matching", () => {
         sheetFilter: "freeVocal",
       }),
     );
-    expect(ruFolkFree.songs.map((item) => item.song.id)).toEqual(["prach-vo-pole-bereza"]);
-    expect(sheetLinkLabel(ruFolkFree.songs[0]!.sheets[0]!)).toBe(
-      "Открыть бесплатный сборник — страница 138 PDF, печатная 30",
+    expect(ruFolkFree.songs.map((item) => item.song.id)).toEqual([]);
+    expect(ruFolkFree.emptyReasons.join(" ")).toMatch(/бесплатн/i);
+
+    const ruFolkVocal = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["joyful"],
+        purpose: "lessons",
+        sheetFilter: "vocal",
+      }),
     );
+    expect(ruFolkVocal.songs.map((item) => item.song.id)).not.toContain("prach-vo-pole-bereza");
+
+    const ruFolkAny = matchSongs(
+      base({
+        age: "35",
+        genres: ["classical"],
+        languages: ["ru"],
+        moods: ["joyful"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(ruFolkAny.songs.map((item) => item.song.id)).toContain("prach-vo-pole-bereza");
+    expect(ruFolkAny.songs.find((item) => item.song.id === "prach-vo-pole-bereza")?.sheets).toEqual([]);
   });
 });

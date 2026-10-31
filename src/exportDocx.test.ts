@@ -290,6 +290,7 @@ describe("Word export", () => {
     expect(anyXml).toContain("Во поле берёза стояла");
     expect(anyXml).toContain("Ссылка на ноты пока не добавлена");
     expect(anyXml).not.toContain("Открыть бесплатный сборник");
+    expect(anyXml).not.toMatch(/MDZ|digitale-sammlungen/i);
     expect(anyRels).not.toContain("digitale-sammlungen.de");
   });
 

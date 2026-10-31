@@ -174,6 +174,7 @@ describe("catalog honesty", () => {
     expect(bereza?.editorialAge.lyricAge).toBe("12plus");
     expect(bereza?.genres).not.toContain("children");
     expect(bereza?.sheetMusic).toEqual([]);
+    expect(bereza?.version).not.toMatch(/MDZ|digitale-sammlungen/i);
     expect(bereza?.infoSource.urls.some((url) => url.includes("digitale-sammlungen.de"))).toBe(false);
     const freeVocal = CATALOG.filter((song) =>
       song.sheetMusic.some((item) => item.access === "free" && item.kind === "vocal"),

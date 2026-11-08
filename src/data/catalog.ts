@@ -79,6 +79,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Катерок"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool"],
     purposes: ["pleasure", "lessons"],
   }),
   song({
@@ -98,6 +99,7 @@ export const CATALOG: Song[] = [
       ],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool", "primary"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/vladimir-ferapontov/pust-begut-neuklyuzhe/piano-vocal-chords/",
@@ -124,6 +126,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Шаинский,_Владимир_Яковлевич"],
     },
     editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
     purposes: ["pleasure", "lessons"],
   }),
   song({
@@ -140,6 +143,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Мама_для_мамонтёнка"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/v-shainskiy/pesenka-mamontenka/piano-vocal/",
@@ -166,6 +170,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Бременские_музыканты_(мультфильм,_1969)"],
     },
     editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
     sheetMusic: [
       sheet({
         url: "https://www.classica21.ru/notes/songs-for-children/19365",
@@ -193,6 +198,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Приключения_Электроника"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preteen"],
     purposes: ["pleasure", "lessons", "karaoke"],
   }),
   song({
@@ -209,6 +215,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Гостья_из_будущего"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preteen"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/evgeniy-krylatov/prekrasnoe-dalyeko/piano-vocal-easy/",
@@ -244,6 +251,7 @@ export const CATALOG: Song[] = [
       urls: ["https://en.wikipedia.org/wiki/Let_It_Go"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preteen", "teen"],
     purposes: ["pleasure", "karaoke", "performance"],
   }),
   song({
@@ -260,6 +268,7 @@ export const CATALOG: Song[] = [
       urls: ["https://en.wikipedia.org/wiki/Do-Re-Mi"],
     },
     editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
     sheetMusic: [
       sheet({
         url: "https://www.musicnotes.com/sheetmusic/the-sound-of-music/do-re-mi/MN0104323",
@@ -314,6 +323,7 @@ export const CATALOG: Song[] = [
       urls: ["https://en.wikipedia.org/wiki/You%27ve_Got_a_Friend_in_Me"],
     },
     editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
     sheetMusic: [
       sheet({
         url: "https://www.musicnotes.com/sheetmusic/randy-newman/youve-got-a-friend-in-me/MN0058651",
@@ -774,6 +784,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Антошка"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/v-shainskiy/antoshka/piano-vocal/",
@@ -809,6 +820,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Крошка_Енот"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/v-shainskiy/ulybka/piano-vocal/",
@@ -836,6 +848,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Голубой_вагон_(песня)"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool", "primary"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/v-shainskiy/goluboy-vagon/piano-vocal/",
@@ -862,6 +875,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Как_Львёнок_и_Черепаха_пели_песню"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool"],
     sheetMusic: [
       sheet({
         url: "https://www.classica21.ru/notes/songs-for-children/19365",
@@ -889,6 +903,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Трям!_Здравствуйте!"],
     },
     editorialAge: age("all"),
+    audienceHint: ["preschool", "primary"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/v-shainskiy/oblaka-belogrivye-loshadki/piano-vocal/",

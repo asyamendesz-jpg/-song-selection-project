@@ -15,7 +15,14 @@ import {
   VOICE_CHANGE_OPTIONS,
 } from "./data/questions";
 import { buildPlaylistDocx, playlistDocxFilename } from "./logic/exportDocx";
-import { formatPlaylist, matchSongs, remainingSongCount, songsForScreen } from "./logic/matching";
+import {
+  extraSongs,
+  formatPlaylist,
+  matchSongs,
+  primarySongs,
+  remainingSongCount,
+  songsForScreen,
+} from "./logic/matching";
 import {
   GENRE_EXCLUSIVE,
   INITIAL_ANSWERS,
@@ -29,6 +36,37 @@ import { SHEET_MISSING, sheetCaption, sheetLinkLabel } from "./logic/sheetMusic"
 import type { Answers, RankedSong, StepId } from "./types";
 
 type Screen = "start" | "quiz" | "result";
+
+function SongCard({ item }: { item: RankedSong }) {
+  return (
+    <article className="song-card">
+      <h3>
+        {item.song.title} — {item.song.artist}
+      </h3>
+      <p>{item.song.version}</p>
+      <span className="status">{item.statusLabel}</span>
+      {item.song.editorialAge.lyricReview === "needsCheck" ? <p>Текст требует проверки.</p> : null}
+      <SheetLinks item={item} />
+      <h4>Почему в подборке</h4>
+      <ul className="reason-list">
+        {item.reasons.map((reason) => (
+          <li key={reason.text}>{reason.text}</li>
+        ))}
+      </ul>
+      {item.practice.length > 0 ? (
+        <>
+          <h4>Идея для занятия</h4>
+          <ul className="reason-list">
+            {item.practice.map((idea) => (
+              <li key={idea}>{idea}</li>
+            ))}
+          </ul>
+          <p className="muted">Эту идею нужно обсудить с педагогом. Это не проверенная учебная задача версии.</p>
+        </>
+      ) : null}
+    </article>
+  );
+}
 
 function SheetLinks({ item }: { item: RankedSong }) {
   if (item.sheets.length === 0 && item.instrumentalSheets.length === 0) {
@@ -289,7 +327,6 @@ export default function App() {
   }
 
   if (screen === "result" && result) {
-    const visibleSongs = songsForScreen(result, expandedResults);
     const extraCount = remainingSongCount(result);
     return (
       <main className="app">
@@ -316,39 +353,35 @@ export default function App() {
             </div>
           ) : (
             <div className="song-list">
-              {result.matchedTotal > 5 && !expandedResults ? (
+              {result.primaryCount > 0 && extraSongs(result).length > 0 && !expandedResults ? (
+                <p className="banner">
+                  Основная подборка: {Math.min(5, result.primaryCount)}
+                  {result.primaryCount > 5 ? ` из ${result.primaryCount}` : ""} по возрастной аудитории.
+                  Ещё {remainingSongCount(result)} можно открыть отдельно: допустимы по тексту, но без подтверждённого соответствия этой аудитории.
+                </p>
+              ) : null}
+              {result.primaryCount === 0 && extraSongs(result).length > 0 && !expandedResults ? (
+                <p className="banner">
+                  Подтверждённого репертуара для этой возрастной аудитории нет. Можно открыть {extraSongs(result).length} песен, допустимых по тексту.
+                </p>
+              ) : null}
+              {result.primaryCount > 5 && extraSongs(result).length === 0 && !expandedResults ? (
                 <p className="banner">Показаны 5 из {result.matchedTotal} подходящих песен.</p>
               ) : null}
-              {visibleSongs.map((item) => (
-                <article key={item.song.id} className="song-card">
-                  <h3>
-                    {item.song.title} — {item.song.artist}
-                  </h3>
-                  <p>{item.song.version}</p>
-                  <span className="status">{item.statusLabel}</span>
-                  {item.song.editorialAge.lyricReview === "needsCheck" ? (
-                    <p>Текст требует проверки.</p>
-                  ) : null}
-                  <SheetLinks item={item} />
-                  <h4>Почему в подборке</h4>
-                  <ul className="reason-list">
-                    {item.reasons.map((reason) => (
-                      <li key={reason.text}>{reason.text}</li>
-                    ))}
-                  </ul>
-                  {item.practice.length > 0 ? (
-                    <>
-                      <h4>Идея для занятия</h4>
-                      <ul className="reason-list">
-                        {item.practice.map((idea) => (
-                          <li key={idea}>{idea}</li>
-                        ))}
-                      </ul>
-                      <p className="muted">Эту идею нужно обсудить с педагогом. Это не проверенная учебная задача версии.</p>
-                    </>
-                  ) : null}
-                </article>
+              {(expandedResults ? primarySongs(result) : songsForScreen(result, false)).map((item) => (
+                <SongCard key={item.song.id} item={item} />
               ))}
+              {expandedResults && extraSongs(result).length > 0 ? (
+                <>
+                  <h3>Дополнительная подборка</h3>
+                  <p className="muted">
+                    Прошли фильтр текста, но не подтверждены как репертуар этой возрастной аудитории.
+                  </p>
+                  {extraSongs(result).map((item) => (
+                    <SongCard key={item.song.id} item={item} />
+                  ))}
+                </>
+              ) : null}
               {extraCount > 0 && !expandedResults ? (
                 <button type="button" className="btn btn-ghost" onClick={() => setExpandedResults(true)}>
                   Показать остальные ({extraCount})

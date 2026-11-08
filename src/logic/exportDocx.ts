@@ -148,10 +148,25 @@ export function buildPlaylistDocument(result: MatchResult, now = new Date()): Do
       children.push(body(line));
     }
   } else {
-    children.push(heading("Песни", HeadingLevel.HEADING_2));
-    result.songs.forEach((item, index) => {
-      children.push(...songBlocks(item, index));
-    });
+    const primary = result.songs.slice(0, result.primaryCount);
+    const extra = result.songs.slice(result.primaryCount);
+    if (primary.length) {
+      children.push(heading("Основная подборка", HeadingLevel.HEADING_2));
+      primary.forEach((item, index) => {
+        children.push(...songBlocks(item, index));
+      });
+    }
+    if (extra.length) {
+      children.push(heading("Дополнительная подборка", HeadingLevel.HEADING_2));
+      children.push(
+        body(
+          "Эти песни прошли фильтр текста и остальные выбранные ограничения, но не подтверждены как репертуар этой возрастной аудитории.",
+        ),
+      );
+      extra.forEach((item, index) => {
+        children.push(...songBlocks(item, result.primaryCount + index));
+      });
+    }
   }
 
   children.push(heading("Итог", HeadingLevel.HEADING_2));

@@ -18,6 +18,7 @@ import {
 } from "./sheetMusic";
 import type {
   Answers,
+  AudienceHint,
   Focus,
   Genre,
   LyricAge,
@@ -79,6 +80,65 @@ function allowedLyricAges(age: number): LyricAge[] {
   if (age < 16) return ["all", "12plus"];
   if (age < 18) return ["all", "12plus", "16plus"];
   return ["all", "12plus", "16plus", "18plus"];
+}
+
+export function audienceBand(age: number): AudienceHint {
+  if (age <= 6) return "preschool";
+  if (age <= 9) return "primary";
+  if (age <= 12) return "preteen";
+  if (age <= 15) return "teen";
+  if (age <= 17) return "lateTeen";
+  return "adult";
+}
+
+function wantsKidsRepertoire(answers: Answers): boolean {
+  return selectedGenres(answers).includes("children");
+}
+
+function hasAudienceHint(song: Song): boolean {
+  return Boolean(song.audienceHint && song.audienceHint.length > 0);
+}
+
+/** Насколько песня подтверждённо совпадает с возрастной аудиторией. 0 — неизвестно или не то. Не путать с lyricAge. */
+export function audienceRank(song: Song, age: number, kidsRepertoire: boolean): number {
+  const band = audienceBand(age);
+  const hints = song.audienceHint ?? [];
+  if (band === "adult") {
+    if (!hasAudienceHint(song)) return 4;
+    if (hints.some((hint) => hint === "adult" || hint === "lateTeen" || hint === "teen" || hint === "preteen")) {
+      return 4;
+    }
+    return 0;
+  }
+  if (!hasAudienceHint(song)) return 0;
+  if (hints.includes(band)) return 4;
+  if (band === "preteen") {
+    if (hints.includes("primary")) return kidsRepertoire ? 3 : 0;
+    if (hints.includes("preschool")) return kidsRepertoire ? 1 : 0;
+    return 0;
+  }
+  if (band === "primary") {
+    if (hints.includes("preteen")) return 3;
+    if (hints.includes("preschool")) return kidsRepertoire ? 1 : 0;
+    return 0;
+  }
+  if (band === "preschool") {
+    if (hints.includes("primary") && kidsRepertoire) return 2;
+    return 0;
+  }
+  if (band === "teen") {
+    if (hints.includes("preteen") || hints.includes("lateTeen")) return 3;
+    return 0;
+  }
+  if (band === "lateTeen") {
+    if (hints.includes("teen") || hints.includes("adult")) return 3;
+    return 0;
+  }
+  return 0;
+}
+
+export function isAudienceMatch(song: Song, age: number, kidsRepertoire: boolean): boolean {
+  return audienceRank(song, age, kidsRepertoire) > 0;
 }
 
 function hasVerifiedRange(song: Song): boolean {
@@ -306,13 +366,47 @@ function answerLines(answers: Answers): string[] {
 
 export const PREVIEW_LIMIT = 5;
 
+export function primarySongs(result: MatchResult): RankedSong[] {
+  return result.songs.slice(0, result.primaryCount);
+}
+
+export function extraSongs(result: MatchResult): RankedSong[] {
+  return result.songs.slice(result.primaryCount);
+}
+
 export function songsForScreen(result: MatchResult, expanded: boolean): RankedSong[] {
-  if (expanded || result.songs.length <= PREVIEW_LIMIT) return result.songs;
-  return result.songs.slice(0, PREVIEW_LIMIT);
+  if (expanded) return result.songs;
+  return primarySongs(result).slice(0, PREVIEW_LIMIT);
 }
 
 export function remainingSongCount(result: MatchResult): number {
-  return Math.max(0, result.songs.length - PREVIEW_LIMIT);
+  return Math.max(0, result.songs.length - songsForScreen(result, false).length);
+}
+
+function audienceCoverageNotes(
+  age: number,
+  kidsRepertoire: boolean,
+  primaryCount: number,
+  total: number,
+): string[] {
+  if (total === 0) return [];
+  const extra = total - primaryCount;
+  const notes: string[] = [];
+  if (primaryCount === 0 && extra > 0) {
+    notes.push(
+      "Подтверждённого репертуара для этой возрастной аудитории в подходящем каталоге нет. Ниже можно открыть песни, допустимые по тексту, но без подтверждённого соответствия аудитории или с другой возрастной пометкой. lyricAge=all само по себе не означает дошкольный репертуар.",
+    );
+  } else if (extra > 0) {
+    notes.push(
+      `Основная подборка — песни с подтверждённой пометкой аудитории для этого возраста${kidsRepertoire ? " и с учётом запроса на детские песни" : ""}. Ещё ${extra} ${extra === 1 ? "песня допустима" : extra < 5 ? "песни допустимы" : "песен допустимы"} по тексту: другая аудитория, только дошкольная пометка или аудитория не указана. Это не оценка голоса.`,
+    );
+  }
+  if (age >= 10 && age <= 12 && !kidsRepertoire) {
+    notes.push(
+      "Для 10–12 лет песни только с дошкольной пометкой не ставятся в основную подборку вместо школьного репертуара. Если нужен малышовый репертуар, явно выберите направление «Детские песни».",
+    );
+  }
+  return notes;
 }
 
 function coverageNotes(
@@ -385,7 +479,8 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
     answers.rangeMode === "known" && Boolean(answers.lowNote) && Boolean(answers.highNote);
 
   const rejected = { language: 0, lyrics: 0, range: 0, genreMood: 0, sheets: 0 };
-  const ranked: { song: Song; score: number; usedRange: boolean }[] = [];
+  const kidsRepertoire = wantsKidsRepertoire(answers);
+  const ranked: { song: Song; score: number; audience: number; usedRange: boolean }[] = [];
   const catalogHasVerifiedRange = catalog.some(hasVerifiedRange);
 
   for (const song of catalog) {
@@ -445,10 +540,10 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
       score += 3;
     }
 
-    ranked.push({ song, score, usedRange });
+    ranked.push({ song, score, audience: audienceRank(song, age, kidsRepertoire), usedRange });
   }
 
-  ranked.sort((a, b) => b.score - a.score);
+  ranked.sort((a, b) => b.audience - a.audience || b.score - a.score);
   const all = ranked.map(({ song }): RankedSong => ({
     song,
     reasons: buildReasons(song, answers),
@@ -457,7 +552,9 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
     sheets: sheetsForFilter(song, answers.sheetFilter),
     instrumentalSheets: resolvedSheetFilter(answers.sheetFilter) === "any" ? instrumentalSheets(song) : [],
   }));
-  const previewSongs = all.slice(0, PREVIEW_LIMIT).map((item) => item.song);
+  const primaryCount = ranked.filter((item) => item.audience > 0).length;
+  const previewSongs = all.slice(0, primaryCount).slice(0, PREVIEW_LIMIT).map((item) => item.song);
+  const audienceNotes = audienceCoverageNotes(age, kidsRepertoire, primaryCount, all.length);
 
   const rangeNote =
     knownRange && !catalogHasVerifiedRange
@@ -466,15 +563,19 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
 
   return {
     songs: all,
+    primaryCount,
     intro: COPY.resultIntro,
     warning: COPY.resultWarning,
     answers: answerLines(answers),
     rangeNote,
-    coverageNotes: coverageNotes(
-      answers,
-      ranked.map((item) => item.song),
-      previewSongs,
-    ),
+    coverageNotes: [
+      ...audienceNotes,
+      ...coverageNotes(
+        answers,
+        ranked.map((item) => item.song),
+        previewSongs,
+      ),
+    ],
     emptyReasons: all.length ? [] : emptyReasons(answers, rejected),
     matchedTotal: ranked.length,
   };
@@ -492,7 +593,7 @@ export function formatPlaylist(result: MatchResult): string {
     result.coverageNotes.forEach((s) => lines.push(s));
     return lines.join("\n");
   }
-  result.songs.forEach((item, index) => {
+  const writeSong = (item: RankedSong, index: number) => {
     lines.push(`${index + 1}. ${item.song.title} — ${item.song.artist}`);
     lines.push(`   Версия: ${item.song.version}`);
     lines.push(`   Статус: ${item.statusLabel}`);
@@ -520,7 +621,20 @@ export function formatPlaylist(result: MatchResult): string {
       item.practice.forEach((idea) => lines.push(`   — ${idea}`));
     }
     lines.push("");
-  });
+  };
+  if (result.primaryCount > 0) {
+    lines.push("Основная подборка");
+    lines.push("");
+    primarySongs(result).forEach((item, index) => writeSong(item, index));
+  }
+  if (extraSongs(result).length > 0) {
+    lines.push("Дополнительная подборка");
+    lines.push(
+      "Эти песни прошли фильтр текста и остальные выбранные ограничения, но не подтверждены как репертуар этой возрастной аудитории.",
+    );
+    lines.push("");
+    extraSongs(result).forEach((item, index) => writeSong(item, result.primaryCount + index));
+  }
   result.coverageNotes.forEach((n) => lines.push(n));
   return lines.join("\n");
 }

@@ -191,6 +191,8 @@ export interface RankedSong {
 
 export interface MatchResult {
   songs: RankedSong[];
+  /** Песни с подтверждённым соответствием возрастной аудитории; идут первыми в `songs`. */
+  primaryCount: number;
   intro: string;
   warning: string;
   answers: string[];

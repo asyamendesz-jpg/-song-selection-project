@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./data/catalog";
 import { resolveOtherLanguageCode } from "./data/languages";
-import { matchSongs, remainingSongCount, songsForScreen } from "./logic/matching";
+import {
+  extraSongs,
+  matchSongs,
+  primarySongs,
+  remainingSongCount,
+  songsForScreen,
+} from "./logic/matching";
 import { sheetLinkLabel } from "./logic/sheetMusic";
 import { INITIAL_ANSWERS, needsVoiceChange, parseAgeInput, stepsFor } from "./logic/quizFlow";
 import { toggleCapped, toggleExclusive } from "./logic/selection";
@@ -446,9 +452,13 @@ describe("matching", () => {
     );
     expect(result.songs.length).toBe(result.matchedTotal);
     expect(result.matchedTotal).toBeGreaterThan(5);
-    expect(songsForScreen(result, false)).toHaveLength(5);
+    expect(songsForScreen(result, false).length).toBeGreaterThan(0);
+    expect(songsForScreen(result, false).length).toBeLessThanOrEqual(5);
     expect(songsForScreen(result, true)).toHaveLength(result.matchedTotal);
-    expect(remainingSongCount(result)).toBe(result.matchedTotal - 5);
+    expect(remainingSongCount(result)).toBe(result.matchedTotal - songsForScreen(result, false).length);
+    expect(songsForScreen(result, false).every((item) => primarySongs(result).some((row) => row.song.id === item.song.id))).toBe(
+      true,
+    );
     expect(result.songs.every((item) => item.song.language === "ru")).toBe(true);
     expect(result.songs.every((item) => item.song.editorialAge.lyricAge === "all")).toBe(true);
     expect(result.songs.every((item) => item.song.genres.some((g) => g === "indie" || g === "musical" || g === "children"))).toBe(
@@ -461,7 +471,7 @@ describe("matching", () => {
     expect(result.rangeNote).toBe(
       "Вы указали удобные ноты: C4–C5. Они не использовались для отбора: в каталоге пока нет проверенных диапазонов.",
     );
-    expect(result.intro).toMatch(/цель влияет на порядок/i);
+    expect(result.intro).toMatch(/подтверждённой возрастной аудиторией/i);
     expect(result.warning).toBe(
       "Это предварительная подборка по вашим предпочтениям. Соответствие песен вашему голосу не проверено. Удобную тональность и аранжировку лучше подобрать с педагогом.",
     );
@@ -532,24 +542,27 @@ describe("matching", () => {
 
     const one = matchSongs(openAnswers, catalogSlice(1));
     expect(one.songs).toHaveLength(1);
-    expect(songsForScreen(one, false)).toHaveLength(1);
-    expect(remainingSongCount(one)).toBe(0);
+    expect(songsForScreen(one, false).length).toBe(one.primaryCount > 0 ? 1 : 0);
+    expect(remainingSongCount(one)).toBe(one.songs.length - songsForScreen(one, false).length);
 
     const five = matchSongs(openAnswers, catalogSlice(5));
     expect(five.songs).toHaveLength(5);
-    expect(songsForScreen(five, false)).toHaveLength(5);
-    expect(remainingSongCount(five)).toBe(0);
+    expect(songsForScreen(five, false).length).toBeLessThanOrEqual(5);
+    expect(songsForScreen(five, false).length).toBe(Math.min(5, five.primaryCount));
+    expect(remainingSongCount(five)).toBe(five.songs.length - songsForScreen(five, false).length);
 
     const six = matchSongs(openAnswers, catalogSlice(6));
     expect(six.songs).toHaveLength(6);
-    expect(songsForScreen(six, false)).toHaveLength(5);
+    expect(songsForScreen(six, false).length).toBe(Math.min(5, six.primaryCount));
     expect(songsForScreen(six, true).map((item) => item.song.id)).toEqual(six.songs.map((item) => item.song.id));
-    expect(remainingSongCount(six)).toBe(1);
+    expect(remainingSongCount(six)).toBe(six.songs.length - songsForScreen(six, false).length);
 
     const many = matchSongs(openAnswers);
     expect(many.matchedTotal).toBeGreaterThan(6);
-    expect(songsForScreen(many, false)).toHaveLength(5);
-    expect(remainingSongCount(many)).toBe(many.matchedTotal - 5);
+    expect(songsForScreen(many, false)).toHaveLength(Math.min(5, many.primaryCount));
+    expect(remainingSongCount(many)).toBe(many.matchedTotal - songsForScreen(many, false).length);
+    expect(many.primaryCount).toBeGreaterThan(0);
+    expect(extraSongs(many).some((item) => item.song.id === "shainsky-antoshka")).toBe(true);
   });
 
   it("keeps any-sheet mode unchanged and does not treat piano solo as singing notes", () => {
@@ -744,6 +757,17 @@ describe("matching", () => {
     expect(ids).not.toContain("perry-roar");
     expect(ids).not.toContain("jepsen-call-me-maybe");
     expect(anySheets.songs.every((item) => item.song.editorialAge.lyricAge === "all")).toBe(true);
+    const shownAny = songsForScreen(anySheets, false);
+    expect(shownAny.length).toBeGreaterThan(0);
+    expect(shownAny.length).toBeLessThanOrEqual(5);
+    expect(shownAny.every((item) => item.song.audienceHint?.includes("preteen"))).toBe(true);
+    expect(shownAny.map((item) => item.song.id)).not.toContain("shainsky-antoshka");
+    expect(shownAny.map((item) => item.song.id)).not.toContain("shainsky-chunga");
+    expect(primarySongs(anySheets).map((item) => item.song.id)).toEqual(
+      expect.arrayContaining(["shainsky-druzya", "minkov-dorogoyu-dobra", "dunaevsky-veter-peremen", "hametova-chiki-briki"]),
+    );
+    expect(extraSongs(anySheets).map((item) => item.song.id)).toContain("shainsky-antoshka");
+    expect(anySheets.primaryCount).toBeLessThan(anySheets.matchedTotal);
 
     const vocal = matchSongs(
       base({
@@ -763,6 +787,52 @@ describe("matching", () => {
     expect(vocal.songs.map((item) => item.song.id)).toContain("dunaevsky-veter-peremen");
     expect(vocal.songs.map((item) => item.song.id)).not.toContain("blanter-katyusha");
     expect(vocal.songs.every((item) => item.sheets.length > 0)).toBe(true);
+    expect(songsForScreen(vocal, false).every((item) => item.song.audienceHint?.includes("preteen"))).toBe(true);
+    expect(songsForScreen(vocal, false).map((item) => item.song.id)).not.toContain("shainsky-antoshka");
+    expect(extraSongs(vocal).map((item) => item.song.id)).toContain("shainsky-antoshka");
+
+    const preschool = matchSongs(
+      base({
+        age: "6",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(songsForScreen(preschool, false).some((item) => item.song.id === "shainsky-antoshka")).toBe(true);
+    expect(primarySongs(preschool).every((item) => item.song.audienceHint?.includes("preschool"))).toBe(true);
+    expect(primarySongs(preschool).map((item) => item.song.id)).not.toContain("hametova-chiki-briki");
+    expect(extraSongs(preschool).map((item) => item.song.id)).toContain("hametova-chiki-briki");
+
+    const adult = matchSongs(
+      base({
+        age: "35",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(primarySongs(adult).some((item) => !item.song.audienceHint)).toBe(true);
+    expect(primarySongs(adult).map((item) => item.song.id)).not.toContain("shainsky-antoshka");
+    expect(extraSongs(adult).map((item) => item.song.id)).toContain("shainsky-antoshka");
+    expect(adult.songs.map((item) => item.song.id)).toContain("blanter-katyusha");
+
+    const kidsRequest = matchSongs(
+      base({
+        age: "11",
+        genres: ["children"],
+        languages: ["ru"],
+        moods: ["joyful"],
+        purpose: "pleasure",
+        sheetFilter: "any",
+      }),
+    );
+    expect(primarySongs(kidsRequest)[0]?.song.audienceHint?.includes("preteen")).toBe(true);
+    expect(primarySongs(kidsRequest).some((item) => item.song.id === "shainsky-antoshka")).toBe(true);
 
     const free = matchSongs(
       base({

@@ -312,6 +312,8 @@ describe("Word export", () => {
       await buildPlaylistDocxBuffer(anySheets, new Date(2026, 9, 31)),
       "word/_rels/document.xml.rels",
     );
+    expect(xml).toContain("Основная подборка");
+    expect(xml).toContain("Дополнительная подборка");
     expect(xml).toContain("Чики-брики");
     expect(xml).toContain("Да-ри-да");
     expect(xml).toContain("Мы выбираем драйв");

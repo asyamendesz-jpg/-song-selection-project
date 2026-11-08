@@ -43,10 +43,11 @@ function sheet(
     collectionPdfPage?: number;
     collectionPrintPage?: number | string;
     visualCheck?: "pages-readable";
+    checkedAt?: string;
   },
 ): SheetMusicSource {
   return {
-    checkedAt: SHEET_CHECKED,
+    checkedAt: source.checkedAt ?? SHEET_CHECKED,
     sameAsRecommended: source.sameAsRecommended ?? false,
     key: source.key ?? null,
     kind: source.kind ?? "vocal",
@@ -1772,6 +1773,157 @@ export const CATALOG: Song[] = [
     },
     editorialAge: age("all"),
     audienceHint: ["preteen"],
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "shainsky-druzya",
+    title: "Когда мои друзья со мной",
+    artist: "из к/ф «По секрету всему свету»",
+    language: "ru",
+    genres: ["children", "pop", "musical"],
+    moods: ["joyful"],
+    version:
+      "Песня из телефильма «По секрету всему свету» (1976, Беларусьфильм); музыка В. Шаинского, слова М. Танича. В фильме — Большой детский хор ЦТ и ВР, солист Д. Голов.",
+    learningTasks: ["ясный текст", "совместное пение"],
+    infoSource: {
+      summary:
+        "Полный текст студийной/фильмовой версии прочитан: друзья в пути, снег и зной, «на медведя выйду без испуга». Нет мата, алкоголя и любовной линии. Предварительно без ограничений по содержанию. PDF с igraj-poj.narod.ru в нотные источники не включён: условия размещения не установлены.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/По_секрету_всему_свету_(фильм)",
+        "https://note-store.ru/notes/v-shainskiy/kogda-moi-druzya-so-mnoy-iz-k-f-po-sekretu-vsemu-svetu-/piano-vocal/",
+      ],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/v-shainskiy/kogda-moi-druzya-so-mnoy-iz-k-f-po-sekretu-vsemu-svetu-/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0071970, лицензия ООО «Первое музыкальное Издательство»: отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены. Не клавир фильма и не файл igraj-poj.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
+    purposes: ["pleasure", "lessons", "karaoke"],
+  }),
+  song({
+    id: "minkov-dorogoyu-dobra",
+    title: "Дорогою добра",
+    artist: "из к/ф «Приключения маленького Мука»",
+    language: "ru",
+    genres: ["children", "pop", "musical"],
+    moods: ["tender", "joyful"],
+    version:
+      "Песня из фильма-сказки «Приключения маленького Мука» (1983, премьера 1984); музыка М. Минкова, слова Ю. Энтина. В фильме исполняют Сергей Таюшев и Татьяна Рузавина. На карточках нот часто подписана как «Дорога добра».",
+    learningTasks: ["легато", "ясный текст"],
+    infoSource: {
+      summary:
+        "Полный текст фильмовой версии прочитан: выбор дороги, друг, «жизнь — не детская игра», «гони соблазны». Нет мата, алкоголя и любовной линии. Предварительно без ограничений по содержанию: «соблазны» здесь нравственные, не сексуальная сцена. PDF с igraj-poj.narod.ru в нотные источники не включён.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/Приключения_маленького_Мука",
+        "https://note-store.ru/notes/mark-minkov/doroga-dobra/piano-vocal/",
+      ],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/mark-minkov/doroga-dobra/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал» под названием «Дорога Добра», артикул PVO0002115, лицензия ООО «Первое музыкальное Издательство»: отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены. Не файл igraj-poj.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "blanter-katyusha",
+    title: "Катюша",
+    artist: "М. Блантер / М. Исаковский",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["tender"],
+    version:
+      "Советская песня 1938 года, первая запись 1939 (В. Батищева). Музыка М. Блантера, слова М. Исаковского. Канон — четыре куплета о девушке и бойце на пограничье, не фронтовые переделки про РСЗО.",
+    learningTasks: ["ясный текст", "легато"],
+    infoSource: {
+      summary:
+        "Полный канонический текст прочитан: яблони, Катюша, «про того, которого любила», привет бойцу, «любовь Катюша сбережет». Нет мата. Предварительно 12plus из‑за романтического ожидания солдата, не из‑за школьной практики исполнения. Фронтовые куплеты про убийство в эту запись не входят. PDF с igraj-poj и карточка НЭБ 1958 в нотные источники не включены.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/Катюша_(песня)",
+        "https://note-store.ru/notes/narodnaya-pesnya/katyusha/piano-vocal/",
+      ],
+    },
+    editorialAge: age("12plus"),
+    audienceHint: ["preteen", "teen", "adult"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/narodnaya-pesnya/katyusha/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал» в разделе «народная песня», артикул PVO0001806, лицензия РАО: авторы на карточке — Блантер и Исаковский, отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены. Не анонимная народная песня и не файл igraj-poj.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "dunaevsky-veter-peremen",
+    title: "Ветер перемен",
+    artist: "из х/ф «Мэри Поппинс, до свидания»",
+    language: "ru",
+    genres: ["children", "pop", "musical"],
+    moods: ["dramatic", "tender"],
+    version:
+      "Финал телефильма «Мэри Поппинс, до свидания» (1983, показ 1984). Музыка М. Дунаевского, слова Н. Олева. В фильме и на пластинке — Павел Смеян и Татьяна Воронина.",
+    learningTasks: ["выразительность", "дыхание"],
+    infoSource: {
+      summary:
+        "Полный текст фильмовой версии прочитан: карусель-Земля, ветра потерь и обид, добрый ветер перемен. Нет мата и любовной линии. Предварительно без ограничений по содержанию. Фортепианное переложение с igraj-poj вокальными нотами не считается. Карточка НЭБ 1958 к этой песне не относится.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/Мэри_Поппинс,_до_свидания",
+        "https://note-store.ru/notes/maksim-dunaevskiy/veter-peremen/piano-vocal/",
+      ],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["primary", "preteen"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/maksim-dunaevskiy/veter-peremen/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0023058, лицензия ООО «Первое музыкальное Издательство»: отдельная вокальная строка со словами. Страницы PDF визуально не просмотрены. Не фортепианное соло и не файл igraj-poj.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
+    purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "pakhmutova-darite-radost",
+    title: "Дарите радость людям",
+    artist: "А. Пахмутова / Н. Добронравов",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["joyful", "tender"],
+    version:
+      "Песня Александры Пахмутовой на стихи Николая Добронравова; в списке сочинений Пахмутовой на энциклопедической странице. Не детская песня из мультфильма.",
+    learningTasks: ["ясный текст", "выразительность"],
+    infoSource: {
+      summary:
+        "Полный текст прочитан: командиры и волшебники добра, радость малышам и старости, улыбки. Нет мата и любовной линии. Предварительно без ограничений по содержанию. Вокальные ноты Note-Store не найдены. PDF с igraj-poj и библиографическая карточка НЭБ в источники не включены.",
+      urls: ["https://ru.wikipedia.org/wiki/Пахмутова,_Александра_Николаевна"],
+    },
+    editorialAge: age("all"),
+    audienceHint: ["preteen", "teen"],
     purposes: ["pleasure", "lessons", "performance"],
   }),
 ];

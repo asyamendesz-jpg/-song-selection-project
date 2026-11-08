@@ -60,7 +60,7 @@ describe("quiz flow", () => {
 
 describe("catalog honesty", () => {
   it("contains 68 real songs, Adele, and no fictional studio acts", () => {
-    expect(CATALOG).toHaveLength(76);
+    expect(CATALOG).toHaveLength(81);
     expect(CATALOG.some((song) => song.id === "adele-someone")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Учебная студия Подборщика")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Song Picker Studio")).toBe(true);
@@ -206,6 +206,33 @@ describe("catalog honesty", () => {
     expect(CATALOG.find((song) => song.id === "hametova-chiki-briki")?.editorialAge.lyricAge).toBe("all");
     expect(CATALOG.find((song) => song.id === "betsy-sigma-boy")?.editorialAge.lyricAge).toBe("12plus");
     expect(CATALOG.find((song) => song.id === "isaeva-da-ri-da")?.sheetMusic).toEqual([]);
+    const schoolBatch = [
+      "shainsky-druzya",
+      "minkov-dorogoyu-dobra",
+      "blanter-katyusha",
+      "dunaevsky-veter-peremen",
+      "pakhmutova-darite-radost",
+    ];
+    for (const id of schoolBatch) {
+      const song = CATALOG.find((item) => item.id === id);
+      expect(song).toBeDefined();
+      expect(CATALOG.filter((item) => item.id === id)).toHaveLength(1);
+      expect(song?.verification.status).toBe("unverified");
+      expect(song?.rangeLow).toBeNull();
+      expect(song?.key).toBeNull();
+      expect(song?.tessitura).toBeNull();
+      expect(song?.difficulty).toBeNull();
+      expect(song?.sheetMusic.every((item) => !/igraj-poj|rusneb/i.test(item.url))).toBe(true);
+      expect(song?.sheetMusic.every((item) => item.visualCheck !== "pages-readable")).toBe(true);
+    }
+    expect(CATALOG.find((song) => song.id === "shainsky-druzya")?.title).toBe("Когда мои друзья со мной");
+    expect(CATALOG.find((song) => song.id === "minkov-dorogoyu-dobra")?.title).toBe("Дорогою добра");
+    expect(CATALOG.find((song) => song.id === "blanter-katyusha")?.editorialAge.lyricAge).toBe("12plus");
+    expect(CATALOG.find((song) => song.id === "blanter-katyusha")?.genres).not.toContain("children");
+    expect(CATALOG.find((song) => song.id === "pakhmutova-darite-radost")?.sheetMusic).toEqual([]);
+    expect(CATALOG.find((song) => song.id === "dunaevsky-veter-peremen")?.sheetMusic[0]?.kind).toBe("vocal");
+    expect(CATALOG.find((song) => song.id === "dunaevsky-veter-peremen")?.sheetMusic[0]?.access).toBe("paid");
+    expect(CATALOG.find((song) => song.id === "shainsky-druzya")?.sheetMusic[0]?.url).toContain("piano-vocal");
   });
 });
 
@@ -706,6 +733,11 @@ describe("matching", () => {
     expect(ids).toContain("lazareva-drive");
     expect(ids).toContain("kondratieva-bosikom");
     expect(ids).toContain("shainsky-antoshka");
+    expect(ids).toContain("shainsky-druzya");
+    expect(ids).toContain("minkov-dorogoyu-dobra");
+    expect(ids).toContain("dunaevsky-veter-peremen");
+    expect(ids).toContain("pakhmutova-darite-radost");
+    expect(ids).not.toContain("blanter-katyusha");
     expect(ids).not.toContain("betsy-sigma-boy");
     expect(ids).not.toContain("onedirection-beautiful");
     expect(ids).not.toContain("swift-shake-it-off");
@@ -725,6 +757,11 @@ describe("matching", () => {
     );
     expect(vocal.songs.map((item) => item.song.id)).not.toContain("hametova-chiki-briki");
     expect(vocal.songs.map((item) => item.song.id)).not.toContain("isaeva-da-ri-da");
+    expect(vocal.songs.map((item) => item.song.id)).not.toContain("pakhmutova-darite-radost");
+    expect(vocal.songs.map((item) => item.song.id)).toContain("shainsky-druzya");
+    expect(vocal.songs.map((item) => item.song.id)).toContain("minkov-dorogoyu-dobra");
+    expect(vocal.songs.map((item) => item.song.id)).toContain("dunaevsky-veter-peremen");
+    expect(vocal.songs.map((item) => item.song.id)).not.toContain("blanter-katyusha");
     expect(vocal.songs.every((item) => item.sheets.length > 0)).toBe(true);
 
     const free = matchSongs(

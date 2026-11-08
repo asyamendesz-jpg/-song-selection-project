@@ -354,18 +354,6 @@ export default function App() {
             </div>
           ) : (
             <div className="song-list">
-              {result.primaryCount > 0 && extraSongs(result).length > 0 && !expandedResults ? (
-                <p className="banner">
-                  Основная подборка: {Math.min(5, result.primaryCount)}
-                  {result.primaryCount > 5 ? ` из ${result.primaryCount}` : ""} по предварительной редакторской пометке аудитории, не педагогическое подтверждение.
-                  Ещё {remainingSongCount(result)} можно открыть отдельно: другая пометка или аудитория не указана.
-                </p>
-              ) : null}
-              {result.primaryCount === 0 && extraSongs(result).length > 0 && !expandedResults ? (
-                <p className="banner">
-                  Нет песен с предварительной редакторской пометкой аудитории для этого возраста. Можно открыть {extraSongs(result).length} песен с другой пометкой или с неуказанной аудиторией.
-                </p>
-              ) : null}
               {result.primaryCount > 5 && extraSongs(result).length === 0 && !expandedResults ? (
                 <p className="banner">Показаны 5 из {result.matchedTotal} подходящих песен.</p>
               ) : null}
@@ -377,7 +365,7 @@ export default function App() {
                 <>
                   <h3>Дополнительная подборка</h3>
                   <p className="muted">
-                    Дополнительно: другая редакторская пометка аудитории или аудитория не указана. Неизвестная аудитория не означает, что песня не подходит.
+                    Эти песни не входят в первые по итоговому баллу. Другая возрастная пометка сама по себе сюда не отправляет.
                   </p>
                   {extraSongs(result).map((item) => (
                     <SongCard key={item.song.id} item={item} />

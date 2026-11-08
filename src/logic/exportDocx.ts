@@ -132,6 +132,7 @@ export function buildPlaylistDocument(result: MatchResult, now = new Date()): Do
       spacing: { after: 200, line: 276 },
       children: [run(`Дата: ${dateLabel}`, { italics: true })],
     }),
+    body(result.intro, { spacingAfter: 160 }),
     body(result.warning, { italics: true, spacingAfter: 280 }),
     heading("Ваши ответы", HeadingLevel.HEADING_2),
   ];

@@ -92,7 +92,7 @@ export interface SongInfoSource {
   urls: string[];
 }
 
-export type SheetAccess = "free" | "paid" | "registration";
+export type SheetAccess = "free" | "paid" | "registration" | "unchecked";
 
 export type SheetKind = "vocal" | "instrumental";
 
@@ -193,7 +193,7 @@ export interface RankedSong {
 
 export interface MatchResult {
   songs: RankedSong[];
-  /** Песни с предварительной редакторской пометкой аудитории для этого возраста; идут первыми в `songs`. */
+  /** Все прошедшие фильтр песни; при раскрытии «остальные» отсекаются только сверх первых пяти. */
   primaryCount: number;
   intro: string;
   warning: string;

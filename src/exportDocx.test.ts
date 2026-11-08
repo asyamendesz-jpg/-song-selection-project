@@ -72,6 +72,8 @@ describe("Word export", () => {
     const xml = zipEntry(buffer, "word/document.xml");
     expect(xml).toContain("Ваша подборка песен");
     expect(xml).toContain("Times New Roman");
+    expect(xml).toContain("не оценку вокальной пригодности");
+    expect(xml).toContain("порядок не означает");
     expect(xml).toContain("Соответствие песен вашему голосу не проверено");
     expect(xml).toContain("Вы указали возраст: 11 лет.");
     expect(xml).toContain("C4");
@@ -152,6 +154,7 @@ describe("Word export", () => {
     expect(dalekoRels).toContain("note-store.ru/notes/evgeniy-krylatov/prekrasnoe-dalyeko/piano-vocal-easy");
     expect(dalekoXml).toContain("голос и фортепиано");
     expect(kidsXml).toContain("Купить ноты");
+    expect(kidsXml).toContain("платно");
     expect(kidsXml).toContain("Купить сборник с этой песней");
     expect(kidsXml).toContain("note-store.ru");
     expect(kidsXml).toContain("страницы партитуры не просматривались");
@@ -189,8 +192,8 @@ describe("Word export", () => {
     const xml = zipEntry(await buildPlaylistDocxBuffer(result, new Date(2026, 9, 31)), "word/document.xml");
     expect(xml).toContain(`В документ включено песен: ${result.matchedTotal}`);
     expect(xml).toContain("Текст требует проверки");
-    expect(xml).toContain("Возрастная аудитория в каталоге не указана");
-    expect(xml).toContain("не исключена как неподходящая");
+    expect(xml).toContain("Возрастная пометка не указана или не совпала");
+    expect(xml).toContain("не считается неподходящей");
     for (const item of result.songs) {
       expect(xml).toContain(item.song.title);
       expect(xml).toContain(item.song.artist);
@@ -299,7 +302,7 @@ describe("Word export", () => {
     expect(anyRels).not.toContain("digitale-sammlungen.de");
   });
 
-  it("exports 11-year-old contemporary pop ideas without 12plus hits or fake free sheets", async () => {
+  it("exports 11-year-old pop / surprise / lessons ideas without 12plus hits or fake free sheets", async () => {
     const anySheets = matchSongs(
       base({
         age: "11",
@@ -319,6 +322,7 @@ describe("Word export", () => {
     );
     expect(xml).toContain("Основная подборка");
     expect(xml).not.toContain("Дополнительная подборка");
+    expect(xml).toContain("Пока это не влияет на подбор");
     expect(xml).toContain("Чики-брики");
     expect(xml).toContain("Да-ри-да");
     expect(xml).toContain("Мы выбираем драйв");
@@ -326,6 +330,33 @@ describe("Word export", () => {
     expect(xml).not.toContain("Сигма Бой");
     expect(xml).not.toContain("Shake It Off");
     expect(rels).not.toContain("betsy-2/sigma-boy");
+  });
+
+  it("writes 15- and 50-year-old pop playlists in ranking order without an extra-audience heading", async () => {
+    for (const age of ["15", "50"] as const) {
+      const result = matchSongs(
+        base({
+          age,
+          genres: ["pop"],
+          languages: ["ru"],
+          moods: ["surprise"],
+          purpose: "lessons",
+          sheetFilter: "any",
+        }),
+      );
+      expect(result.primaryCount).toBe(result.matchedTotal);
+      const xml = zipEntry(await buildPlaylistDocxBuffer(result, new Date(2026, 9, 31)), "word/document.xml");
+      expect(xml).toContain("Основная подборка");
+      expect(xml).not.toContain("Дополнительная подборка");
+      if (age === "15") expect(xml).not.toContain("Экспонат");
+      if (age === "50") expect(xml).toContain("Экспонат");
+      let cursor = 0;
+      for (const item of result.songs) {
+        const at = xml.indexOf(item.song.title, cursor);
+        expect(at).toBeGreaterThan(cursor - 1);
+        cursor = at + item.song.title.length;
+      }
+    }
   });
 
   it("puts every matched song into Word for counts 1, 5 and 6", async () => {

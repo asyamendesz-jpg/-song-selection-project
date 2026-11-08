@@ -551,6 +551,18 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Позови_меня_с_собой"],
     },
     editorialAge: age("12plus"),
+    audienceHint: ["adult"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/alla-pugacheva/pozovi-menya-s-soboy/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0033855: заявлена отдельная вокальная партия со словами. Страницы PDF визуально не просмотрены. Не фортепианное соло и не Easy.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
     purposes: ["pleasure", "lessons", "karaoke", "recording", "performance"],
   }),
   song({
@@ -567,6 +579,27 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Миллион_роз"],
     },
     editorialAge: age("12plus"),
+    audienceHint: ["adult"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/alla-pugacheva/million-alykh-roz-2/piano-vocal-chords/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал&Аккорды», артикул PVC0299683, лицензия РАО, авторы Паулс / Вознесенский, исполнитель Пугачёва. Заявлена вокальная мелодия со словами. Страницы PDF визуально не просмотрены. Не кавер Егора Крида и не фортепианное соло.",
+        scoring: "голос, фортепиано и буквенные аккорды",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+      sheet({
+        url: "https://note-store.ru/notes/alla-pugacheva/million-alykh-roz-2/vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Вокал», артикул VOC0299685, лицензия РАО: заявлена вокальная мелодия с текстом без фортепианного сопровождения. Страницы PDF визуально не просмотрены. Не кавер Егора Крида.",
+        scoring: "вокальная строка со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
     purposes: ["pleasure", "karaoke", "performance"],
   }),
   song({
@@ -583,6 +616,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Кони_привередливые"],
     },
     editorialAge: age("16plus"),
+    audienceHint: ["adult"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/vladimir-vysotskiy/koni-priveredlivye/piano-vocal/",
@@ -609,6 +643,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Ленинград_(группа)"],
     },
     editorialAge: age("18plus"),
+    audienceHint: ["adult"],
     purposes: ["karaoke", "performance", "pleasure"],
   }),
   song({
@@ -714,6 +749,18 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Юнона_и_Авось"],
     },
     editorialAge: age("16plus"),
+    audienceHint: ["adult"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/nikolai-karachentsov/ya-tebya-nikogda-ne-zabudu-ty-menya-na-rassvete-razbudish/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0039547, под исполнителем Николай Караченцов, заголовок с подстрочником «Ты меня на рассвете разбудишь». Это карточка того же номера Рыбникова / Вознесенского из «Юноны и Авось», не другая одноимённая песня. Страницы PDF визуально не просмотрены. Фортепианное соло PSO0004138 в вокальный режим не включено.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
     purposes: ["lessons", "performance", "recording"],
   }),
   song({
@@ -757,6 +804,7 @@ export const CATALOG: Song[] = [
       urls: ["https://en.wikipedia.org/wiki/Someone_Like_You_(Adele_song)"],
     },
     editorialAge: age("16plus"),
+    audienceHint: ["adult"],
     sheetMusic: [
       sheet({
         url: "https://www.musicnotes.com/sheetmusic/adele/someone-like-you/MN0090054",
@@ -940,6 +988,7 @@ export const CATALOG: Song[] = [
       urls: ["https://ru.wikipedia.org/wiki/Окуджава,_Булат_Шалвович"],
     },
     editorialAge: age("12plus"),
+    audienceHint: ["adult"],
     purposes: ["pleasure", "lessons"],
   }),
   song({
@@ -949,13 +998,27 @@ export const CATALOG: Song[] = [
     language: "ru",
     genres: ["bard"],
     moods: ["dramatic"],
-    version: "Стихи Б. Окуджавы, музыка И. Шварца; исполнение П. Луспекаева в фильме Владимира Мотыля (1970)",
+    version:
+      "Музыка Исаака Шварца, слова Булата Окуджавы; исполнение Павла Луспекаева в фильме Владимира Мотыля (1970). Не авторская песня Окуджавы.",
     learningTasks: ["смысл текста", "сценическая подача"],
     infoSource: {
-      summary: "Песня Верещагина из фильма «Белое солнце пустыни».",
+      summary:
+        "Песня Верещагина из фильма «Белое солнце пустыни»: музыка И. Шварца, стихи Б. Окуджавы, исполнение П. Луспекаева. Не вторая авторская песня Окуджавы в каталоге.",
       urls: ["https://ru.wikipedia.org/wiki/Ваше_благородие,_госпожа_удача"],
     },
     editorialAge: age("16plus"),
+    audienceHint: ["adult"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/isaak-shvarts/vashe-blagorodie-gospozha-udacha/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Карточка «Пианино&Вокал», артикул PVO0007426, композитор Исаак Шварц, из к/ф «Белое солнце пустыни». Не авторская песня Окуджавы и не фортепианное соло. Страницы PDF визуально не просмотрены.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+    ],
     purposes: ["pleasure", "karaoke"],
   }),
   song({
@@ -975,6 +1038,7 @@ export const CATALOG: Song[] = [
       ],
     },
     editorialAge: age("12plus"),
+    audienceHint: ["adult"],
     sheetMusic: [
       sheet({
         url: "https://note-store.ru/notes/yuri-vizbor/milaya-moya-solnyshko-lesnoe/piano-vocal/",
@@ -1099,6 +1163,7 @@ export const CATALOG: Song[] = [
       urls: ["https://en.wikipedia.org/wiki/Fly_Me_to_the_Moon"],
     },
     editorialAge: age("12plus", "needsCheck"),
+    audienceHint: ["adult"],
     sheetMusic: [
       sheet({
         url: "https://www.musicnotes.com/sheetmusic/frank-sinatra/fly-me-to-the-moon/MN0077035",
@@ -1940,5 +2005,49 @@ export const CATALOG: Song[] = [
     editorialAge: age("all"),
     audienceHint: ["preteen", "teen"],
     purposes: ["pleasure", "lessons", "performance"],
+  }),
+  song({
+    id: "nargiz-nas-byut",
+    title: "Нас бьют, мы летаем",
+    artist: "Наргиз",
+    language: "ru",
+    genres: ["pop"],
+    moods: ["dramatic", "energetic"],
+    version:
+      "Студийная запись Наргиз, альбом «Шум сердца» (MONOLIT, 7 октября 2016). Кавер песни Аллы Пугачёвой (премьера 2014). Музыка Андрея Ктитарева, слова Джахан Поллыевой. Не запись Пугачёвой.",
+    learningTasks: ["эмоциональная подача", "устойчивая интонация"],
+    infoSource: {
+      summary:
+        "Полный текст прочитан по нескольким публикациям одной редакции: любовь без страховки, боль, измена, страх потери, «нас бьют — мы летаем». Нет мата и сексуальных сцен. Предварительно 12plus из‑за романтики, насилия в метафоре и темы предательства, не из‑за выдачи для 11 лет. Партитура MuseScore открыть не удалось (Cloudflare); страница указана как Piano Solo, отдельная вокальная строка не подтверждена. Доступ к MuseScore не проверен. Карточка Note-Store «Пианино&Вокал» PVO0023509 заявляет отдельную вокальную партию со словами; страницы PDF не просмотрены.",
+      urls: [
+        "https://ru.wikipedia.org/wiki/Наргиз",
+        "https://musescore.com/user/80345629/scores/17633611",
+        "https://note-store.ru/notes/nargiz/nas-byut-my-letaem/piano-vocal/",
+      ],
+    },
+    editorialAge: age("12plus"),
+    audienceHint: ["adult"],
+    sheetMusic: [
+      sheet({
+        url: "https://note-store.ru/notes/nargiz/nas-byut-my-letaem/piano-vocal/",
+        publisher: "Note-Store",
+        versionNote:
+          "Лицензия РАО, артикул PVO0023509: карточка «Пианино&Вокал» указывает отдельную вокальную партию со словами. Страницы PDF визуально не просмотрены. Не запись Пугачёвой и не фортепианное соло MuseScore.",
+        scoring: "голос и фортепиано, со словами",
+        access: "paid",
+        checkedAt: "2026-11-08",
+      }),
+      sheet({
+        url: "https://musescore.com/user/80345629/scores/17633611",
+        publisher: "MuseScore",
+        versionNote:
+          "Страница обозначена Piano Solo. Страницы партитуры из этой среды не открылись (проверка Cloudflare), поэтому отдельная вокальная строка и текст в нотах не подтверждены. В режимы вокальных нот не включено. Доступ не проверен: не registration и не бесплатное скачивание.",
+        scoring: "фортепиано соло (по метке страницы; состав станов не просмотрен)",
+        access: "unchecked",
+        kind: "instrumental",
+        checkedAt: "2026-11-08",
+      }),
+    ],
+    purposes: ["pleasure", "karaoke", "performance"],
   }),
 ];

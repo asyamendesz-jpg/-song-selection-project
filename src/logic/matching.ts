@@ -19,7 +19,6 @@ import {
 import type {
   Answers,
   AudienceHint,
-  Focus,
   Genre,
   LyricAge,
   MatchResult,
@@ -58,15 +57,6 @@ const GENRE_LABEL: Record<Genre, string> = {
   bard: "авторская песня",
   other: "другое",
   explore: "разные направления",
-};
-
-const FOCUS_TO_TASK: Record<Focus, string[]> = {
-  intonation: ["интонация", "ритм", "ровн"],
-  breath: ["дыхан", "фраз", "легато"],
-  diction: ["дикц", "текст", "соглас", "артикул"],
-  expression: ["выразит", "динамик", "эмоц", "подач"],
-  stage: ["сцен", "движен", "артист"],
-  comfort: [],
 };
 
 function parseAge(raw: string): number | null {
@@ -115,38 +105,39 @@ function admitsPreschoolRepertoire(age: number, kidsRepertoire: boolean): boolea
 }
 
 export const AUDIENCE_PRIMARY_NOTE =
-  "Предварительная редакторская пометка аудитории для этого возраста. Это не педагогическое подтверждение.";
+  "Предварительная редакторская пометка аудитории для этого возраста. Небольшой бонус, не педагогическое подтверждение.";
 export const AUDIENCE_UNKNOWN_NOTE =
-  "Возрастная аудитория в каталоге не указана. Песня не исключена как неподходящая.";
-export const AUDIENCE_OTHER_NOTE =
-  "Другая предварительная редакторская пометка аудитории. Песня допустима по тексту, это не отказ по возрасту.";
+  "Возрастная пометка не указана или не совпала. Это нейтрально: песня не считается неподходящей.";
 export const EXTRA_SECTION_NOTE =
-  "Дополнительно: песни с другой редакторской пометкой аудитории и песни, у которых аудитория не указана. Неизвестная аудитория не означает, что песня не подходит.";
+  "Дополнительная подборка показывается, только если часть песен отдельно отложена. Другая возрастная пометка сама по себе сюда не отправляет.";
 
-function audienceNoteFor(song: Song, rank: number): string {
-  if (rank > 0) return AUDIENCE_PRIMARY_NOTE;
-  if (!hasAudienceHint(song)) return AUDIENCE_UNKNOWN_NOTE;
-  return AUDIENCE_OTHER_NOTE;
+/** Мягкий бонус, меньше одного совпадения жанра (×4), чтобы тег не забивал выбранные жанр и настроение. */
+const AUDIENCE_SOFT_BONUS = 3;
+
+function audienceNoteFor(bonus: number): string {
+  if (bonus > 0) return AUDIENCE_PRIMARY_NOTE;
+  return AUDIENCE_UNKNOWN_NOTE;
 }
 
-/** Сортировка по редакторской пометке аудитории. 0 — неизвестно или другая пометка. Не путать с lyricAge и не считать педагогическим подтверждением. */
+/**
+ * Мягкое предпочтение редакторской пометки. 0 — неизвестно или другая пометка.
+ * Для взрослых совпадает только явный adult. Не путать с lyricAge.
+ */
 export function audienceRank(song: Song, age: number, kidsRepertoire: boolean): number {
   const band = audienceBand(age);
   const hints = hintsOf(song);
-  if (band === "adult") {
-    if (hints.includes("adult")) return 4;
-    if (hints.includes("lateTeen") || hints.includes("teen")) return 4;
-    return 0;
-  }
   if (!hasAudienceHint(song)) return 0;
-  if (hints.includes(band)) return 4;
+  if (band === "adult") {
+    return hints.includes("adult") ? AUDIENCE_SOFT_BONUS : 0;
+  }
+  if (hints.includes(band)) return AUDIENCE_SOFT_BONUS;
   if (band === "preteen") {
-    if (hints.includes("primary")) return kidsRepertoire ? 3 : 0;
+    if (hints.includes("primary")) return kidsRepertoire ? 2 : 0;
     if (hints.includes("preschool")) return kidsRepertoire ? 1 : 0;
     return 0;
   }
   if (band === "primary") {
-    if (hints.includes("preteen")) return 3;
+    if (hints.includes("preteen")) return 2;
     if (hints.includes("preschool")) return kidsRepertoire ? 1 : 0;
     return 0;
   }
@@ -154,14 +145,16 @@ export function audienceRank(song: Song, age: number, kidsRepertoire: boolean): 
     if (hints.includes("primary") && kidsRepertoire) return 2;
     return 0;
   }
-  if (band === "teen") {
-    return 0;
-  }
   if (band === "lateTeen") {
-    if (hints.includes("teen") || hints.includes("adult")) return 3;
+    if (hints.includes("teen") || hints.includes("adult")) return 2;
     return 0;
   }
   return 0;
+}
+
+/** Другая возрастная пометка больше не откладывает песню. Малышовый репертуар отсекается отдельно. */
+export function isAudienceExtra(_song: Song, _age: number, _kidsRepertoire: boolean): boolean {
+  return false;
 }
 
 export function isAudienceMatch(song: Song, age: number, kidsRepertoire: boolean): boolean {
@@ -207,20 +200,26 @@ function genreOverlap(song: Song, answers: Answers): number {
 }
 
 function moodOverlap(song: Song, answers: Answers): number {
-  if (answers.moods.includes("surprise") && answers.moods.length === 1) return 1;
   const selected = answers.moods.filter((m) => m !== "surprise");
-  if (selected.length === 0) return 1;
+  if (selected.length === 0) return 0;
   return song.moods.filter((m) => selected.includes(m)).length;
 }
 
-function purposeFit(song: Song, answers: Answers): boolean {
-  if (!answers.purpose) return true;
-  return song.purposes.includes(answers.purpose);
+function purposeBonus(song: Song, answers: Answers): number {
+  if (!answers.purpose || answers.purpose === "lessons") return 0;
+  return song.purposes.includes(answers.purpose) ? 3 : 0;
 }
 
-function focusMatchesTask(focus: Focus, task: string): boolean {
-  const needles = FOCUS_TO_TASK[focus];
-  return needles.some((n) => task.toLowerCase().includes(n));
+function compareRanked(
+  a: { song: Song; score: number; audience: number },
+  b: { song: Song; score: number; audience: number },
+): number {
+  const total = b.score + b.audience - (a.score + a.audience);
+  if (total !== 0) return total;
+  if (b.audience !== a.audience) return b.audience - a.audience;
+  const byTitle = a.song.title.localeCompare(b.song.title, "ru");
+  if (byTitle !== 0) return byTitle;
+  return a.song.id.localeCompare(b.song.id);
 }
 
 function teachingRangeBonus(song: Song, answers: Answers): number {
@@ -370,7 +369,11 @@ function answerLines(answers: Answers): string[] {
   if (answers.moods.length) {
     lines.push(`Вы указали настроение: ${joinPhrases(answers.moods.map((m) => MOOD_LABEL[m]))}.`);
   }
-  if (answers.purpose) {
+  if (answers.purpose === "lessons") {
+    lines.push(
+      "Вы указали цель: для занятий вокалом. Пока это не влияет на подбор: редакторские теги цели заполнены несопоставимо.",
+    );
+  } else if (answers.purpose) {
     lines.push(`Вы указали цель: ${PURPOSE_LABEL[answers.purpose]}.`);
   }
   const focuses = answers.focuses.filter((f) => f !== "comfort");
@@ -410,24 +413,9 @@ export function remainingSongCount(result: MatchResult): number {
   return Math.max(0, result.songs.length - songsForScreen(result, false).length);
 }
 
-function audienceCoverageNotes(
-  age: number,
-  kidsRepertoire: boolean,
-  primaryCount: number,
-  total: number,
-): string[] {
+function audienceCoverageNotes(age: number, kidsRepertoire: boolean, total: number): string[] {
   if (total === 0) return [];
-  const extra = total - primaryCount;
   const notes: string[] = [];
-  if (primaryCount === 0 && extra > 0) {
-    notes.push(
-      "В подходящем каталоге нет песен с предварительной редакторской пометкой аудитории для этого возраста. Ниже можно открыть песни, допустимые по тексту: с другой пометкой или с неуказанной аудиторией. Неизвестная аудитория не означает, что песня не подходит. lyricAge=all само по себе не означает дошкольный репертуар.",
-    );
-  } else if (extra > 0) {
-    notes.push(
-      `Основная подборка — песни с предварительной редакторской пометкой аудитории для этого возраста${kidsRepertoire ? " и с учётом запроса на детские песни" : ""}. Это не педагогическое подтверждение. Ещё ${extra} ${extra === 1 ? "песня" : extra < 5 ? "песни" : "песен"}: другая пометка или аудитория не указана. Неизвестная аудитория не означает, что песня не подходит.`,
-    );
-  }
   if (age >= 10 && age <= 12 && !kidsRepertoire) {
     notes.push(
       "Для 10–12 лет песни только с дошкольной пометкой не ставятся в основную подборку вместо школьного репертуара. Если нужен малышовый репертуар, явно выберите направление «Детские песни».",
@@ -552,7 +540,8 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
       rejected.genreMood += 1;
       continue;
     }
-    if (m === 0 && !answers.moods.includes("surprise")) {
+    const moodRestricted = answers.moods.some((mood) => mood !== "surprise");
+    if (m === 0 && moodRestricted) {
       rejected.genreMood += 1;
       continue;
     }
@@ -564,34 +553,36 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
     let score = 0;
     score += g * 4;
     score += m * 4;
-    if (purposeFit(song, answers)) score += 3;
+    score += purposeBonus(song, answers);
     if (verified) {
       score += teachingRangeBonus(song, answers);
       score += tessituraBonus(song, answers);
       score -= skillGapPenalty(song, answers);
       score += 1;
     }
-    const focuses = answers.focuses.filter((f) => f !== "comfort");
-    if (focuses.some((focus) => song.learningTasks.some((task) => focusMatchesTask(focus, task)))) {
-      score += 3;
-    }
 
-    ranked.push({ song, score, audience: audienceRank(song, age, kidsRepertoire), usedRange });
+    const audience = audienceRank(song, age, kidsRepertoire);
+    ranked.push({
+      song,
+      score,
+      audience,
+      usedRange,
+    });
   }
 
-  ranked.sort((a, b) => b.audience - a.audience || b.score - a.score);
+  ranked.sort(compareRanked);
   const all = ranked.map(({ song, audience }): RankedSong => ({
     song,
     reasons: buildReasons(song, answers),
     practice: [],
     statusLabel: "Предварительный вариант",
-    audienceNote: audienceNoteFor(song, audience),
+    audienceNote: audienceNoteFor(audience),
     sheets: sheetsForFilter(song, answers.sheetFilter),
     instrumentalSheets: resolvedSheetFilter(answers.sheetFilter) === "any" ? instrumentalSheets(song) : [],
   }));
-  const primaryCount = ranked.filter((item) => item.audience > 0).length;
+  const primaryCount = ranked.length;
   const previewSongs = all.slice(0, primaryCount).slice(0, PREVIEW_LIMIT).map((item) => item.song);
-  const audienceNotes = audienceCoverageNotes(age, kidsRepertoire, primaryCount, all.length);
+  const audienceNotes = audienceCoverageNotes(age, kidsRepertoire, all.length);
 
   const rangeNote =
     knownRange && !catalogHasVerifiedRange

@@ -1,8 +1,8 @@
+import { mkdirSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./data/catalog";
 import { resolveOtherLanguageCode } from "./data/languages";
 import {
-  AUDIENCE_OTHER_NOTE,
   AUDIENCE_PRIMARY_NOTE,
   AUDIENCE_UNKNOWN_NOTE,
   extraSongs,
@@ -12,7 +12,7 @@ import {
   remainingSongCount,
   songsForScreen,
 } from "./logic/matching";
-import { sheetLinkLabel } from "./logic/sheetMusic";
+import { sheetCaption, sheetLinkLabel } from "./logic/sheetMusic";
 import { INITIAL_ANSWERS, needsVoiceChange, parseAgeInput, stepsFor } from "./logic/quizFlow";
 import { toggleCapped, toggleExclusive } from "./logic/selection";
 import type { Answers, AudienceHint } from "./types";
@@ -70,7 +70,7 @@ describe("quiz flow", () => {
 
 describe("catalog honesty", () => {
   it("contains 68 real songs, Adele, and no fictional studio acts", () => {
-    expect(CATALOG).toHaveLength(81);
+    expect(CATALOG).toHaveLength(82);
     expect(CATALOG.some((song) => song.id === "adele-someone")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Учебная студия Подборщика")).toBe(true);
     expect(CATALOG.every((song) => song.artist !== "Song Picker Studio")).toBe(true);
@@ -84,6 +84,59 @@ describe("catalog honesty", () => {
     expect(CATALOG.every((song) => song.editorialAge.lyricReview === "preliminary" || song.editorialAge.lyricReview === "needsCheck")).toBe(
       true,
     );
+  });
+
+  it("adds Nargiz cover without treating MuseScore piano solo as vocal sheets", () => {
+    const song = CATALOG.find((item) => item.id === "nargiz-nas-byut");
+    expect(song).toBeDefined();
+    expect(CATALOG.filter((item) => item.title === "Нас бьют, мы летаем")).toHaveLength(1);
+    expect(song?.artist).toBe("Наргиз");
+    expect(song?.version).toMatch(/Шум сердца/);
+    expect(song?.version).toMatch(/Ктитарева/);
+    expect(song?.version).toMatch(/Поллыевой/);
+    expect(song?.version).toMatch(/Не запись Пугачёвой/);
+    expect(song?.editorialAge.lyricAge).toBe("12plus");
+    expect(song?.editorialAge.lyricReview).toBe("preliminary");
+    expect(song?.audienceHint).toEqual(["adult"]);
+    expect(song?.verification.status).toBe("unverified");
+    expect(song?.rangeLow).toBeNull();
+    expect(song?.difficulty).toBeNull();
+    const musescore = song?.sheetMusic.find((source) => source.url.includes("musescore.com"));
+    expect(musescore?.kind).toBe("instrumental");
+    expect(musescore?.access).toBe("unchecked");
+    expect(musescore?.registrationRequired).toBe(false);
+    expect(musescore?.visualCheck).toBeUndefined();
+    expect(sheetLinkLabel(musescore!)).toContain("доступ не проверен");
+    expect(sheetCaption(musescore!)).toContain("доступ не проверен");
+    const noteStore = song?.sheetMusic.find((source) => source.url.includes("note-store.ru"));
+    expect(noteStore?.kind).toBe("vocal");
+    expect(noteStore?.access).toBe("paid");
+    expect(noteStore?.visualCheck).toBeUndefined();
+    expect(sheetLinkLabel(noteStore!)).toBe("Купить ноты");
+    expect(sheetCaption(noteStore!)).toContain("платно");
+    expect(sheetCaption(noteStore!)).toContain("страницы партитуры не просматривались");
+    const eleven = matchSongs(
+      base({
+        age: "11",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(eleven.songs.every((item) => item.song.id !== "nargiz-nas-byut")).toBe(true);
+    const fiftyAny = matchSongs(
+      base({
+        age: "50",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(fiftyAny.songs.some((item) => item.song.id === "nargiz-nas-byut")).toBe(true);
   });
 
   it("does not treat lyricAge=all as the children's category", () => {
@@ -169,7 +222,11 @@ describe("catalog honesty", () => {
     expect(oblaka?.sheetMusic.some((item) => item.kind === "vocal")).toBe(true);
     expect(oblaka?.sheetMusic.some((item) => item.kind === "instrumental" && /piano-solo/.test(item.url))).toBe(true);
     expect(CATALOG.find((song) => song.id === "gladkov-solnyshke")?.sheetMusic[0]?.format).toBe("collection");
-    expect(CATALOG.every((song) => song.sheetMusic.every((item) => item.registrationRequired === false))).toBe(true);
+    expect(
+      CATALOG.every((song) =>
+        song.sheetMusic.every((item) => item.registrationRequired === (item.access === "registration")),
+      ),
+    ).toBe(true);
     const alyabyev = CATALOG.find((song) => song.id === "alyabyev-solovey");
     expect(alyabyev?.verification.status).toBe("unverified");
     expect(alyabyev?.rangeLow).toBeNull();
@@ -475,10 +532,13 @@ describe("matching", () => {
     expect(result.rangeNote).toBe(
       "Вы указали удобные ноты: От до первой октавы до до второй октавы (C4–C5). Они не использовались для отбора: в каталоге пока нет проверенных диапазонов.",
     );
-    expect(result.intro).toMatch(/предварительной редакторской пометкой аудитории/i);
+    expect(result.intro).toMatch(/небольшой бонус/i);
     expect(result.intro).toMatch(/не педагогическое подтверждение/i);
+    expect(result.intro).toMatch(/пока не влияет на баллы/i);
+    expect(result.intro).toMatch(/не оценку вокальной пригодности/i);
+    expect(result.warning).toMatch(/порядок не означает/i);
     expect(result.warning).toBe(
-      "Это предварительная подборка по вашим предпочтениям. Соответствие песен вашему голосу не проверено. Удобную тональность и аранжировку лучше подобрать с педагогом.",
+      "Это предварительная подборка по совпадению предпочтений и предварительных редакторских пометок. Соответствие песен вашему голосу не проверено: порядок не означает, что песня удобна или пригодна для вашего диапазона. Удобную тональность и аранжировку лучше подобрать с педагогом.",
     );
     expect(result.answers.some((line) => line === "Вы указали возраст: 11 лет.")).toBe(true);
     expect(result.songs.every((item) => item.reasons.length >= 2 && item.reasons.length <= 3)).toBe(true);
@@ -568,9 +628,7 @@ describe("matching", () => {
     expect(remainingSongCount(many)).toBe(many.matchedTotal - songsForScreen(many, false).length);
     expect(many.primaryCount).toBeGreaterThan(0);
     expect(many.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
-    expect(primarySongs(many).every((item) => Boolean(item.song.audienceHint?.some((hint) => hint === "adult" || hint === "teen" || hint === "lateTeen")))).toBe(
-      true,
-    );
+    expect(primarySongs(many).some((item) => !item.song.audienceHint)).toBe(true);
   });
 
   it("keeps any-sheet mode unchanged and does not treat piano solo as singing notes", () => {
@@ -656,10 +714,13 @@ describe("matching", () => {
         sheetFilter: "freeVocal",
       }),
     );
-    expect(freeAny.songs.map((item) => item.song.id)).toEqual(["schubert-ave-maria", "alyabyev-solovey"]);
-    expect(freeAny.songs[0]?.sheets.every((source) => source.access === "free" && source.kind === "vocal")).toBe(true);
-    expect(freeAny.songs[0]?.sheets[0]?.url).toContain("mutopiaproject.org");
-    expect(sheetLinkLabel(freeAny.songs[0]!.sheets[0]!)).toBe("Открыть бесплатные ноты");
+    expect(freeAny.songs.map((item) => item.song.id)).toEqual(["alyabyev-solovey", "schubert-ave-maria"]);
+    expect(freeAny.songs.every((item) => item.sheets.every((source) => source.access === "free" && source.kind === "vocal"))).toBe(
+      true,
+    );
+    const schubert = freeAny.songs.find((item) => item.song.id === "schubert-ave-maria");
+    expect(schubert?.sheets[0]?.url).toContain("mutopiaproject.org");
+    expect(sheetLinkLabel(schubert!.sheets[0]!)).toBe("Открыть бесплатные ноты");
     expect(freeAny.answers.some((line) => /бесплатными вокальными нотами/.test(line))).toBe(true);
 
     const germanRomance = matchSongs(
@@ -811,9 +872,9 @@ describe("matching", () => {
       }),
     );
     expect(songsForScreen(preschool, false).some((item) => item.song.id === "shainsky-antoshka")).toBe(true);
-    expect(primarySongs(preschool).every((item) => item.song.audienceHint?.includes("preschool"))).toBe(true);
-    expect(primarySongs(preschool).map((item) => item.song.id)).not.toContain("hametova-chiki-briki");
-    expect(extraSongs(preschool).map((item) => item.song.id)).toContain("hametova-chiki-briki");
+    expect(songsForScreen(preschool, false).every((item) => item.song.audienceHint?.includes("preschool"))).toBe(true);
+    expect(songsForScreen(preschool, false).map((item) => item.song.id)).not.toContain("hametova-chiki-briki");
+    expect(preschool.songs.map((item) => item.song.id)).toContain("hametova-chiki-briki");
 
     const adult = matchSongs(
       base({
@@ -825,15 +886,16 @@ describe("matching", () => {
         sheetFilter: "any",
       }),
     );
-    expect(primarySongs(adult).every((item) => item.song.audienceHint?.some((hint) => hint === "adult" || hint === "teen" || hint === "lateTeen"))).toBe(
-      true,
-    );
     expect(primarySongs(adult).map((item) => item.song.id)).toContain("blanter-katyusha");
-    expect(primarySongs(adult).map((item) => item.song.id)).not.toContain("shainsky-vmeste");
-    expect(primarySongs(adult).map((item) => item.song.id)).not.toContain("betsy-sigma-boy");
+    expect(primarySongs(adult).map((item) => item.song.id)).toContain("pugacheva-pozovi");
+    expect(primarySongs(adult).map((item) => item.song.id)).toContain("splin-orbit");
+    expect(primarySongs(adult).map((item) => item.song.id)).toContain("frozen-otpusti");
+    expect(primarySongs(adult).map((item) => item.song.id)).toContain("shainsky-vmeste");
     expect(adult.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
-    expect(adult.songs.map((item) => item.song.id)).toContain("blanter-katyusha");
-    expect(extraSongs(adult).some((item) => !item.song.audienceHint)).toBe(true);
+    expect(songsForScreen(adult, false).map((item) => item.song.id)).toEqual(
+      expect.arrayContaining(["pugacheva-pozovi", "blanter-katyusha"]),
+    );
+    expect(extraSongs(adult)).toHaveLength(0);
 
     const kidsRequest = matchSongs(
       base({
@@ -881,19 +943,26 @@ describe("matching", () => {
         sheetFilter: "any",
       }),
     );
-    expect(primarySongs(fifteen).every((item) => item.song.audienceHint?.includes("teen"))).toBe(true);
     expect(primarySongs(fifteen).map((item) => item.song.id)).toContain("blanter-katyusha");
-    expect(primarySongs(fifteen).map((item) => item.song.id)).not.toContain("shainsky-vmeste");
-    expect(primarySongs(fifteen).map((item) => item.song.id)).not.toContain("betsy-sigma-boy");
-    expect(extraSongs(fifteen).map((item) => item.song.id)).toContain("shainsky-vmeste");
+    expect(primarySongs(fifteen).map((item) => item.song.id)).toContain("splin-orbit");
+    expect(primarySongs(fifteen).map((item) => item.song.id)).toContain("pugacheva-pozovi");
+    expect(primarySongs(fifteen).map((item) => item.song.id)).toContain("shainsky-vmeste");
+    expect(primarySongs(fifteen).map((item) => item.song.id)).toContain("betsy-sigma-boy");
+    expect(fifteen.songs.every((item) => item.song.id !== "leningrad-eksponat")).toBe(true);
     expect(fifteen.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
-    expect(primarySongs(fifteen).every((item) => item.audienceNote === AUDIENCE_PRIMARY_NOTE)).toBe(true);
-    expect(extraSongs(fifteen).find((item) => item.song.id === "shainsky-vmeste")?.audienceNote).toBe(AUDIENCE_OTHER_NOTE);
+    expect(extraSongs(fifteen)).toHaveLength(0);
+    expect(primarySongs(fifteen).find((item) => item.song.id === "splin-orbit")?.audienceNote).toBe(AUDIENCE_UNKNOWN_NOTE);
+    expect(primarySongs(fifteen).find((item) => item.song.id === "pugacheva-pozovi")?.audienceNote).toBe(
+      AUDIENCE_UNKNOWN_NOTE,
+    );
 
-    const adultUnknown = extraSongs(adult).find((item) => !item.song.audienceHint);
-    expect(adultUnknown).toBeDefined();
-    expect(adultUnknown?.audienceNote).toBe(AUDIENCE_UNKNOWN_NOTE);
+    expect(primarySongs(adult).find((item) => item.song.id === "splin-orbit")?.audienceNote).toBe(AUDIENCE_UNKNOWN_NOTE);
+    expect(primarySongs(adult).find((item) => item.song.id === "pugacheva-pozovi")?.audienceNote).toBe(
+      AUDIENCE_PRIMARY_NOTE,
+    );
     expect(adult.songs.some((item) => item.song.id === "pugacheva-pozovi" || item.song.id === "splin-orbit")).toBe(true);
+    expect(CATALOG.find((song) => song.id === "okudzhava-udacha")?.version).toMatch(/Исаака Шварца/);
+    expect(CATALOG.find((song) => song.id === "okudzhava-udacha")?.version).toMatch(/не авторская песня Окуджавы/i);
 
     const lateTeenAll = {
       ...CATALOG.find((song) => song.id === "pakhmutova-darite-radost")!,
@@ -917,10 +986,154 @@ describe("matching", () => {
       [lateTeenAll, lateTeenAdultLyrics, CATALOG.find((song) => song.id === "blanter-katyusha")!],
     );
     expect(lateProbe.songs.map((item) => item.song.id)).not.toContain("probe-late-teen-18");
-    expect(primarySongs(lateProbe).map((item) => item.song.id)).not.toContain("probe-late-teen-all");
-    expect(extraSongs(lateProbe).map((item) => item.song.id)).toContain("probe-late-teen-all");
-    expect(extraSongs(lateProbe).find((item) => item.song.id === "probe-late-teen-all")?.audienceNote).toBe(
-      AUDIENCE_OTHER_NOTE,
+    expect(primarySongs(lateProbe).map((item) => item.song.id)).toContain("probe-late-teen-all");
+    expect(lateProbe.songs.find((item) => item.song.id === "probe-late-teen-all")?.audienceNote).toBe(
+      AUDIENCE_UNKNOWN_NOTE,
     );
+
+    const taggedAdult = {
+      ...CATALOG.find((song) => song.id === "pugacheva-pozovi")!,
+      id: "probe-tagged-adult-pop",
+      genres: ["pop"] as typeof CATALOG[0]["genres"],
+      moods: ["tender"] as typeof CATALOG[0]["moods"],
+      audienceHint: ["adult"] as AudienceHint[],
+    };
+    const untaggedDoubleGenre = {
+      ...CATALOG.find((song) => song.id === "splin-orbit")!,
+      id: "probe-untagged-pop-indie",
+      genres: ["pop", "indie"] as typeof CATALOG[0]["genres"],
+      moods: ["tender"] as typeof CATALOG[0]["moods"],
+      audienceHint: undefined,
+    };
+    const bonusVsGenre = matchSongs(
+      base({
+        age: "50",
+        genres: ["pop", "indie"],
+        languages: ["ru"],
+        moods: ["tender"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+      [taggedAdult, untaggedDoubleGenre],
+    );
+    expect(bonusVsGenre.songs.map((item) => item.song.id)).toEqual([
+      "probe-untagged-pop-indie",
+      "probe-tagged-adult-pop",
+    ]);
+
+    const withTasks = matchSongs(
+      base({
+        age: "50",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        focuses: ["expression", "diction"],
+        sheetFilter: "any",
+      }),
+    );
+    const withoutTasks = matchSongs(
+      base({
+        age: "50",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        focuses: ["comfort"],
+        sheetFilter: "any",
+      }),
+    );
+    expect(withTasks.songs.map((item) => item.song.id)).toEqual(withoutTasks.songs.map((item) => item.song.id));
+    expect(withTasks.answers.some((line) => /пока это не влияет на подбор/i.test(line))).toBe(true);
+
+    const titleFirst = {
+      ...CATALOG.find((song) => song.id === "splin-orbit")!,
+      id: "probe-title-a",
+      title: "Аааа",
+      genres: ["pop"] as typeof CATALOG[0]["genres"],
+      moods: ["tender"] as typeof CATALOG[0]["moods"],
+      audienceHint: undefined,
+    };
+    const titleSecond = {
+      ...titleFirst,
+      id: "probe-title-b",
+      title: "Яяяя",
+    };
+    const titleOrder = matchSongs(
+      base({
+        age: "50",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+      [titleSecond, titleFirst],
+    );
+    expect(titleOrder.songs.map((item) => item.song.id)).toEqual(["probe-title-a", "probe-title-b"]);
+
+    expect(CATALOG.find((song) => song.id === "pugacheva-pozovi")?.sheetMusic.every((item) => item.visualCheck !== "pages-readable")).toBe(
+      true,
+    );
+    expect(CATALOG.find((song) => song.id === "yunona-zabudu")?.sheetMusic[0]?.url).toMatch(/karachentsov/i);
+    expect(CATALOG.find((song) => song.id === "okudzhava-udacha")?.sheetMusic[0]?.url).toMatch(/isaak-shvarts/i);
+    expect(CATALOG.find((song) => song.id === "pugacheva-million")?.sheetMusic.every((item) => !/egor-krid/i.test(item.url))).toBe(
+      true,
+    );
+
+    const elevenTenderVocal = matchSongs(
+      base({
+        age: "11",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["tender"],
+        purpose: "lessons",
+        sheetFilter: "vocal",
+      }),
+    );
+    expect(elevenTenderVocal.songs.every((item) => item.song.editorialAge.lyricAge === "all")).toBe(true);
+    expect(elevenTenderVocal.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
+    expect(elevenTenderVocal.songs.every((item) => item.sheets.length > 0)).toBe(true);
+
+    const fiftyCalmVocal = matchSongs(
+      base({
+        age: "50",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["calm"],
+        purpose: "lessons",
+        sheetFilter: "vocal",
+      }),
+    );
+    expect(fiftyCalmVocal.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
+    expect(fiftyCalmVocal.songs.every((item) => item.sheets.length > 0)).toBe(true);
+
+    const dumpLine = (item: (typeof elevenTenderVocal.songs)[number], index: number) =>
+      `${index + 1}. ${item.song.title} — ${item.song.artist} | ${item.reasons.join("; ")} | ${item.audienceNote} | ноты: ${item.sheets
+        .map((source) => `${source.access}${source.visualCheck ? `/${source.visualCheck}` : ""}`)
+        .join(", ") || "нет"}`;
+    mkdirSync("tmp", { recursive: true });
+    writeFileSync(
+      "tmp/mood-questionnaires.txt",
+      [
+        `11 tender vocal: ${elevenTenderVocal.songs.length}`,
+        ...elevenTenderVocal.songs.map(dumpLine),
+        "",
+        `50 calm vocal: ${fiftyCalmVocal.songs.length}`,
+        ...fiftyCalmVocal.songs.map(dumpLine),
+      ].join("\n"),
+      "utf8",
+    );
+
+    for (const id of ["pugacheva-pozovi", "pugacheva-million", "yunona-zabudu", "okudzhava-udacha"] as const) {
+      const shopSong = CATALOG.find((song) => song.id === id);
+      expect(shopSong?.sheetMusic.every((item) => item.visualCheck !== "pages-readable")).toBe(true);
+      expect(shopSong?.sheetMusic.filter((item) => item.access === "paid").every((item) => sheetCaption(item).includes("платно"))).toBe(
+        true,
+      );
+      expect(shopSong?.sheetMusic.filter((item) => item.access === "paid").every((item) => sheetLinkLabel(item).startsWith("Купить"))).toBe(
+        true,
+      );
+    }
   });
 });

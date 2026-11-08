@@ -6,6 +6,7 @@ export const SHEET_ACCESS_LABEL: Record<SheetAccess, string> = {
   free: "бесплатно",
   paid: "платно",
   registration: "нужна регистрация",
+  unchecked: "доступ не проверен",
 };
 
 export const SHEET_FORMAT_LABEL: Record<SheetFormat, string> = {
@@ -45,7 +46,14 @@ export function sheetSite(source: SheetMusicSource): string {
 }
 
 export function sheetLinkLabel(source: SheetMusicSource): string {
-  if (source.kind === "instrumental") return "Инструментальное переложение";
+  if (source.kind === "instrumental") {
+    if (source.access === "unchecked") return "Инструментальное переложение — доступ не проверен";
+    if (source.access === "paid") return "Инструментальное переложение — платно";
+    if (source.access === "registration") return "Инструментальное переложение — нужна регистрация";
+    if (source.access === "free") return "Инструментальное переложение — бесплатно";
+    return "Инструментальное переложение";
+  }
+  if (source.access === "unchecked") return "Открыть ноты — доступ не проверен";
   if (source.access === "free" && source.format === "collection") {
     const pdf = source.collectionPdfPage;
     const print = source.collectionPrintPage;
@@ -63,9 +71,9 @@ export function sheetLinkLabel(source: SheetMusicSource): string {
 }
 
 export function sheetCaption(source: SheetMusicSource): string {
-  const parts = [sheetSite(source), source.scoring];
+  const parts = [sheetSite(source), source.scoring, SHEET_ACCESS_LABEL[source.access]];
   if (source.key) parts.push(`тональность ${source.key}`);
-  if (source.registrationRequired) parts.push("нужна регистрация");
+  if (source.registrationRequired && source.access !== "registration") parts.push("нужна регистрация");
   if (source.kind === "vocal") {
     parts.push(
       source.visualCheck === "pages-readable"

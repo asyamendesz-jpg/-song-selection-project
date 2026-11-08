@@ -185,13 +185,15 @@ export interface RankedSong {
   reasons: MatchReason[];
   practice: string[];
   statusLabel: "Предварительный вариант";
+  /** Редакторская пометка аудитории или явно «не указана»; не педагогический вердикт. */
+  audienceNote: string;
   sheets: SheetMusicSource[];
   instrumentalSheets: SheetMusicSource[];
 }
 
 export interface MatchResult {
   songs: RankedSong[];
-  /** Песни с подтверждённым соответствием возрастной аудитории; идут первыми в `songs`. */
+  /** Песни с предварительной редакторской пометкой аудитории для этого возраста; идут первыми в `songs`. */
   primaryCount: number;
   intro: string;
   warning: string;

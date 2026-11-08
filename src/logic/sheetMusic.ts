@@ -66,6 +66,13 @@ export function sheetCaption(source: SheetMusicSource): string {
   const parts = [sheetSite(source), source.scoring];
   if (source.key) parts.push(`тональность ${source.key}`);
   if (source.registrationRequired) parts.push("нужна регистрация");
+  if (source.kind === "vocal") {
+    parts.push(
+      source.visualCheck === "pages-readable"
+        ? "страницы просмотрены, ноты читаются"
+        : "страницы партитуры не просматривались",
+    );
+  }
   const mismatch = source.sameAsRecommended
     ? ""
     : ". Другая аранжировка, не точное совпадение с рекомендованной записью";

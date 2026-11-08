@@ -9,6 +9,7 @@ import {
   TextRun,
 } from "docx";
 import type { MatchResult, RankedSong } from "../types";
+import { EXTRA_SECTION_NOTE } from "./matching";
 import { SHEET_MISSING, sheetCaption, sheetLinkLabel } from "./sheetMusic";
 
 const FONT = "Times New Roman";
@@ -68,6 +69,7 @@ function songBlocks(item: RankedSong, index: number): Paragraph[] {
       spacing: { after: 80, line: 276 },
       children: [run("Статус: ", { bold: true }), run(item.statusLabel)],
     }),
+    body(item.audienceNote, { italics: true, spacingAfter: 80 }),
   ];
   if (item.song.editorialAge.lyricReview === "needsCheck") {
     blocks.push(body("Текст требует проверки.", { italics: true, spacingAfter: 80 }));
@@ -160,7 +162,7 @@ export function buildPlaylistDocument(result: MatchResult, now = new Date()): Do
       children.push(heading("Дополнительная подборка", HeadingLevel.HEADING_2));
       children.push(
         body(
-          "Эти песни прошли фильтр текста и остальные выбранные ограничения, но не подтверждены как репертуар этой возрастной аудитории.",
+          EXTRA_SECTION_NOTE,
         ),
       );
       extra.forEach((item, index) => {

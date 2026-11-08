@@ -1,6 +1,6 @@
 import { CATALOG } from "../data/catalog";
 import { OTHER_LANGUAGE_LABEL, resolveOtherLanguageCode } from "../data/languages";
-import { rangeSpanSemitones, userRangeCoversSong } from "../data/notes";
+import { formatNoteRange, rangeSpanSemitones, userRangeCoversSong } from "../data/notes";
 import {
   COPY,
   EXPERIENCE_OPTIONS,
@@ -99,15 +99,43 @@ function hasAudienceHint(song: Song): boolean {
   return Boolean(song.audienceHint && song.audienceHint.length > 0);
 }
 
-/** Насколько песня подтверждённо совпадает с возрастной аудиторией. 0 — неизвестно или не то. Не путать с lyricAge. */
+function hintsOf(song: Song): AudienceHint[] {
+  return song.audienceHint ?? [];
+}
+
+/** Малышовый репертуар: есть preschool и нет школьной/взрослой пометки. */
+export function isPreschoolRepertoire(song: Song): boolean {
+  const hints = hintsOf(song);
+  if (!hints.includes("preschool")) return false;
+  return !hints.some((hint) => hint === "preteen" || hint === "teen" || hint === "lateTeen" || hint === "adult");
+}
+
+function admitsPreschoolRepertoire(age: number, kidsRepertoire: boolean): boolean {
+  return kidsRepertoire || audienceBand(age) === "preschool";
+}
+
+export const AUDIENCE_PRIMARY_NOTE =
+  "Предварительная редакторская пометка аудитории для этого возраста. Это не педагогическое подтверждение.";
+export const AUDIENCE_UNKNOWN_NOTE =
+  "Возрастная аудитория в каталоге не указана. Песня не исключена как неподходящая.";
+export const AUDIENCE_OTHER_NOTE =
+  "Другая предварительная редакторская пометка аудитории. Песня допустима по тексту, это не отказ по возрасту.";
+export const EXTRA_SECTION_NOTE =
+  "Дополнительно: песни с другой редакторской пометкой аудитории и песни, у которых аудитория не указана. Неизвестная аудитория не означает, что песня не подходит.";
+
+function audienceNoteFor(song: Song, rank: number): string {
+  if (rank > 0) return AUDIENCE_PRIMARY_NOTE;
+  if (!hasAudienceHint(song)) return AUDIENCE_UNKNOWN_NOTE;
+  return AUDIENCE_OTHER_NOTE;
+}
+
+/** Сортировка по редакторской пометке аудитории. 0 — неизвестно или другая пометка. Не путать с lyricAge и не считать педагогическим подтверждением. */
 export function audienceRank(song: Song, age: number, kidsRepertoire: boolean): number {
   const band = audienceBand(age);
-  const hints = song.audienceHint ?? [];
+  const hints = hintsOf(song);
   if (band === "adult") {
-    if (!hasAudienceHint(song)) return 4;
-    if (hints.some((hint) => hint === "adult" || hint === "lateTeen" || hint === "teen" || hint === "preteen")) {
-      return 4;
-    }
+    if (hints.includes("adult")) return 4;
+    if (hints.includes("lateTeen") || hints.includes("teen")) return 4;
     return 0;
   }
   if (!hasAudienceHint(song)) return 0;
@@ -127,7 +155,6 @@ export function audienceRank(song: Song, age: number, kidsRepertoire: boolean): 
     return 0;
   }
   if (band === "teen") {
-    if (hints.includes("preteen") || hints.includes("lateTeen")) return 3;
     return 0;
   }
   if (band === "lateTeen") {
@@ -238,8 +265,8 @@ function optionText<T extends string>(options: { id: T; label: string }[], id: T
   return label.replace(/\.$/, "");
 }
 
-function formatUserNote(note: string): string {
-  return note.replace("#", "♯");
+function formatUserNoteRange(low: string, high: string): string {
+  return formatNoteRange(low, high) ?? `${low}–${high}`;
 }
 
 function languageAnswer(answers: Answers): string {
@@ -394,11 +421,11 @@ function audienceCoverageNotes(
   const notes: string[] = [];
   if (primaryCount === 0 && extra > 0) {
     notes.push(
-      "Подтверждённого репертуара для этой возрастной аудитории в подходящем каталоге нет. Ниже можно открыть песни, допустимые по тексту, но без подтверждённого соответствия аудитории или с другой возрастной пометкой. lyricAge=all само по себе не означает дошкольный репертуар.",
+      "В подходящем каталоге нет песен с предварительной редакторской пометкой аудитории для этого возраста. Ниже можно открыть песни, допустимые по тексту: с другой пометкой или с неуказанной аудиторией. Неизвестная аудитория не означает, что песня не подходит. lyricAge=all само по себе не означает дошкольный репертуар.",
     );
   } else if (extra > 0) {
     notes.push(
-      `Основная подборка — песни с подтверждённой пометкой аудитории для этого возраста${kidsRepertoire ? " и с учётом запроса на детские песни" : ""}. Ещё ${extra} ${extra === 1 ? "песня допустима" : extra < 5 ? "песни допустимы" : "песен допустимы"} по тексту: другая аудитория, только дошкольная пометка или аудитория не указана. Это не оценка голоса.`,
+      `Основная подборка — песни с предварительной редакторской пометкой аудитории для этого возраста${kidsRepertoire ? " и с учётом запроса на детские песни" : ""}. Это не педагогическое подтверждение. Ещё ${extra} ${extra === 1 ? "песня" : extra < 5 ? "песни" : "песен"}: другая пометка или аудитория не указана. Неизвестная аудитория не означает, что песня не подходит.`,
     );
   }
   if (age >= 10 && age <= 12 && !kidsRepertoire) {
@@ -447,6 +474,11 @@ function emptyReasons(answers: Answers, rejected: Record<string, number>): strin
   if (rejected.lyrics) {
     reasons.push("Часть песен скрыта из‑за предварительной возрастной уместности текста.");
   }
+  if (rejected.audience) {
+    reasons.push(
+      "Малышовый репертуар для этого возраста не показывается, пока явно не выбраны «Детские песни».",
+    );
+  }
   if (rejected.range) {
     reasons.push("Для указанных удобных нот не нашлось версий с проверенным диапазоном конкретной аранжировки.");
   }
@@ -478,7 +510,7 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
   const knownRange =
     answers.rangeMode === "known" && Boolean(answers.lowNote) && Boolean(answers.highNote);
 
-  const rejected = { language: 0, lyrics: 0, range: 0, genreMood: 0, sheets: 0 };
+  const rejected = { language: 0, lyrics: 0, range: 0, genreMood: 0, sheets: 0, audience: 0 };
   const kidsRepertoire = wantsKidsRepertoire(answers);
   const ranked: { song: Song; score: number; audience: number; usedRange: boolean }[] = [];
   const catalogHasVerifiedRange = catalog.some(hasVerifiedRange);
@@ -490,6 +522,10 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
     }
     if (!lyricAllowed.includes(song.editorialAge.lyricAge)) {
       rejected.lyrics += 1;
+      continue;
+    }
+    if (isPreschoolRepertoire(song) && !admitsPreschoolRepertoire(age, kidsRepertoire)) {
+      rejected.audience += 1;
       continue;
     }
 
@@ -544,11 +580,12 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
   }
 
   ranked.sort((a, b) => b.audience - a.audience || b.score - a.score);
-  const all = ranked.map(({ song }): RankedSong => ({
+  const all = ranked.map(({ song, audience }): RankedSong => ({
     song,
     reasons: buildReasons(song, answers),
     practice: [],
     statusLabel: "Предварительный вариант",
+    audienceNote: audienceNoteFor(song, audience),
     sheets: sheetsForFilter(song, answers.sheetFilter),
     instrumentalSheets: resolvedSheetFilter(answers.sheetFilter) === "any" ? instrumentalSheets(song) : [],
   }));
@@ -558,7 +595,7 @@ export function matchSongs(answers: Answers, catalog: Song[] = CATALOG): MatchRe
 
   const rangeNote =
     knownRange && !catalogHasVerifiedRange
-      ? `Вы указали удобные ноты: ${formatUserNote(answers.lowNote)}–${formatUserNote(answers.highNote)}. Они не использовались для отбора: в каталоге пока нет проверенных диапазонов.`
+      ? `Вы указали удобные ноты: ${formatUserNoteRange(answers.lowNote, answers.highNote)}. Они не использовались для отбора: в каталоге пока нет проверенных диапазонов.`
       : null;
 
   return {
@@ -597,6 +634,7 @@ export function formatPlaylist(result: MatchResult): string {
     lines.push(`${index + 1}. ${item.song.title} — ${item.song.artist}`);
     lines.push(`   Версия: ${item.song.version}`);
     lines.push(`   Статус: ${item.statusLabel}`);
+    lines.push(`   ${item.audienceNote}`);
     if (item.song.editorialAge.lyricReview === "needsCheck") {
       lines.push("   Текст требует проверки.");
     }
@@ -630,7 +668,7 @@ export function formatPlaylist(result: MatchResult): string {
   if (extraSongs(result).length > 0) {
     lines.push("Дополнительная подборка");
     lines.push(
-      "Эти песни прошли фильтр текста и остальные выбранные ограничения, но не подтверждены как репертуар этой возрастной аудитории.",
+      EXTRA_SECTION_NOTE,
     );
     lines.push("");
     extraSongs(result).forEach((item, index) => writeSong(item, result.primaryCount + index));

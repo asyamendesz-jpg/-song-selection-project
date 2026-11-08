@@ -45,6 +45,7 @@ function SongCard({ item }: { item: RankedSong }) {
       </h3>
       <p>{item.song.version}</p>
       <span className="status">{item.statusLabel}</span>
+      <p className="muted">{item.audienceNote}</p>
       {item.song.editorialAge.lyricReview === "needsCheck" ? <p>Текст требует проверки.</p> : null}
       <SheetLinks item={item} />
       <h4>Почему в подборке</h4>
@@ -356,18 +357,19 @@ export default function App() {
               {result.primaryCount > 0 && extraSongs(result).length > 0 && !expandedResults ? (
                 <p className="banner">
                   Основная подборка: {Math.min(5, result.primaryCount)}
-                  {result.primaryCount > 5 ? ` из ${result.primaryCount}` : ""} по возрастной аудитории.
-                  Ещё {remainingSongCount(result)} можно открыть отдельно: допустимы по тексту, но без подтверждённого соответствия этой аудитории.
+                  {result.primaryCount > 5 ? ` из ${result.primaryCount}` : ""} по предварительной редакторской пометке аудитории, не педагогическое подтверждение.
+                  Ещё {remainingSongCount(result)} можно открыть отдельно: другая пометка или аудитория не указана.
                 </p>
               ) : null}
               {result.primaryCount === 0 && extraSongs(result).length > 0 && !expandedResults ? (
                 <p className="banner">
-                  Подтверждённого репертуара для этой возрастной аудитории нет. Можно открыть {extraSongs(result).length} песен, допустимых по тексту.
+                  Нет песен с предварительной редакторской пометкой аудитории для этого возраста. Можно открыть {extraSongs(result).length} песен с другой пометкой или с неуказанной аудиторией.
                 </p>
               ) : null}
               {result.primaryCount > 5 && extraSongs(result).length === 0 && !expandedResults ? (
                 <p className="banner">Показаны 5 из {result.matchedTotal} подходящих песен.</p>
               ) : null}
+              {expandedResults && result.primaryCount > 0 ? <h3>Основная подборка</h3> : null}
               {(expandedResults ? primarySongs(result) : songsForScreen(result, false)).map((item) => (
                 <SongCard key={item.song.id} item={item} />
               ))}
@@ -375,7 +377,7 @@ export default function App() {
                 <>
                   <h3>Дополнительная подборка</h3>
                   <p className="muted">
-                    Прошли фильтр текста, но не подтверждены как репертуар этой возрастной аудитории.
+                    Дополнительно: другая редакторская пометка аудитории или аудитория не указана. Неизвестная аудитория не означает, что песня не подходит.
                   </p>
                   {extraSongs(result).map((item) => (
                     <SongCard key={item.song.id} item={item} />
@@ -516,7 +518,17 @@ export default function App() {
           <div className="note-grid">
             <div className="field">
               <label htmlFor="lowNote">Нижняя удобная нота</label>
-              <select id="lowNote" value={answers.lowNote} onChange={(event) => patch({ lowNote: event.target.value })}>
+              <select
+                id="lowNote"
+                value={answers.lowNote}
+                onChange={(event) => {
+                  const lowNote = event.target.value;
+                  const low = noteToMidi(lowNote);
+                  const high = noteToMidi(answers.highNote);
+                  const highNote = low !== null && high !== null && high < low ? lowNote : answers.highNote;
+                  patch({ lowNote, highNote });
+                }}
+              >
                 {NOTE_OPTIONS.map((note) => (
                   <option key={note.id} value={note.id}>
                     {note.label}
@@ -527,7 +539,10 @@ export default function App() {
             <div className="field">
               <label htmlFor="highNote">Верхняя удобная нота</label>
               <select id="highNote" value={answers.highNote} onChange={(event) => patch({ highNote: event.target.value })}>
-                {NOTE_OPTIONS.map((note) => (
+                {NOTE_OPTIONS.filter((note) => {
+                  const low = noteToMidi(answers.lowNote);
+                  return low === null || note.midi >= low;
+                }).map((note) => (
                   <option key={note.id} value={note.id}>
                     {note.label}
                   </option>

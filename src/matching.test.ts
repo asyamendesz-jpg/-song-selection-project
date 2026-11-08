@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { CATALOG } from "./data/catalog";
 import { resolveOtherLanguageCode } from "./data/languages";
 import {
+  AUDIENCE_OTHER_NOTE,
+  AUDIENCE_PRIMARY_NOTE,
+  AUDIENCE_UNKNOWN_NOTE,
   extraSongs,
+  isPreschoolRepertoire,
   matchSongs,
   primarySongs,
   remainingSongCount,
@@ -11,7 +15,7 @@ import {
 import { sheetLinkLabel } from "./logic/sheetMusic";
 import { INITIAL_ANSWERS, needsVoiceChange, parseAgeInput, stepsFor } from "./logic/quizFlow";
 import { toggleCapped, toggleExclusive } from "./logic/selection";
-import type { Answers } from "./types";
+import type { Answers, AudienceHint } from "./types";
 
 function base(partial: Partial<Answers>): Answers {
   return {
@@ -267,7 +271,7 @@ describe("matching", () => {
       true,
     );
     expect(result.warning).toMatch(/соответствие песен вашему голосу не проверено/i);
-    expect(result.rangeNote).toMatch(/Вы указали удобные ноты: C4–C5/);
+    expect(result.rangeNote).toMatch(/От до первой октавы до до второй октавы \(C4–C5\)/);
     expect(result.rangeNote).toMatch(/не использовались для отбора/);
     expect(result.answers.every((line) => !/свободнее выглядят|неравномерно/i.test(line))).toBe(true);
   });
@@ -469,9 +473,10 @@ describe("matching", () => {
       true,
     );
     expect(result.rangeNote).toBe(
-      "Вы указали удобные ноты: C4–C5. Они не использовались для отбора: в каталоге пока нет проверенных диапазонов.",
+      "Вы указали удобные ноты: От до первой октавы до до второй октавы (C4–C5). Они не использовались для отбора: в каталоге пока нет проверенных диапазонов.",
     );
-    expect(result.intro).toMatch(/подтверждённой возрастной аудиторией/i);
+    expect(result.intro).toMatch(/предварительной редакторской пометкой аудитории/i);
+    expect(result.intro).toMatch(/не педагогическое подтверждение/i);
     expect(result.warning).toBe(
       "Это предварительная подборка по вашим предпочтениям. Соответствие песен вашему голосу не проверено. Удобную тональность и аранжировку лучше подобрать с педагогом.",
     );
@@ -525,7 +530,7 @@ describe("matching", () => {
   });
 
   it("keeps all matches internally and previews only the first five", () => {
-    const catalogSlice = (count: number) => CATALOG.slice(0, count);
+    const catalogSlice = (count: number) => CATALOG.filter((song) => !isPreschoolRepertoire(song)).slice(0, count);
     const openAnswers = base({
       age: "30",
       genres: ["explore"],
@@ -562,7 +567,10 @@ describe("matching", () => {
     expect(songsForScreen(many, false)).toHaveLength(Math.min(5, many.primaryCount));
     expect(remainingSongCount(many)).toBe(many.matchedTotal - songsForScreen(many, false).length);
     expect(many.primaryCount).toBeGreaterThan(0);
-    expect(extraSongs(many).some((item) => item.song.id === "shainsky-antoshka")).toBe(true);
+    expect(many.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
+    expect(primarySongs(many).every((item) => Boolean(item.song.audienceHint?.some((hint) => hint === "adult" || hint === "teen" || hint === "lateTeen")))).toBe(
+      true,
+    );
   });
 
   it("keeps any-sheet mode unchanged and does not treat piano solo as singing notes", () => {
@@ -745,7 +753,7 @@ describe("matching", () => {
     expect(ids).toContain("isaeva-da-ri-da");
     expect(ids).toContain("lazareva-drive");
     expect(ids).toContain("kondratieva-bosikom");
-    expect(ids).toContain("shainsky-antoshka");
+    expect(ids).not.toContain("shainsky-antoshka");
     expect(ids).toContain("shainsky-druzya");
     expect(ids).toContain("minkov-dorogoyu-dobra");
     expect(ids).toContain("dunaevsky-veter-peremen");
@@ -766,8 +774,9 @@ describe("matching", () => {
     expect(primarySongs(anySheets).map((item) => item.song.id)).toEqual(
       expect.arrayContaining(["shainsky-druzya", "minkov-dorogoyu-dobra", "dunaevsky-veter-peremen", "hametova-chiki-briki"]),
     );
-    expect(extraSongs(anySheets).map((item) => item.song.id)).toContain("shainsky-antoshka");
-    expect(anySheets.primaryCount).toBeLessThan(anySheets.matchedTotal);
+    expect(anySheets.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
+    expect(anySheets.primaryCount).toBe(anySheets.matchedTotal);
+    expect(extraSongs(anySheets)).toHaveLength(0);
 
     const vocal = matchSongs(
       base({
@@ -789,7 +798,7 @@ describe("matching", () => {
     expect(vocal.songs.every((item) => item.sheets.length > 0)).toBe(true);
     expect(songsForScreen(vocal, false).every((item) => item.song.audienceHint?.includes("preteen"))).toBe(true);
     expect(songsForScreen(vocal, false).map((item) => item.song.id)).not.toContain("shainsky-antoshka");
-    expect(extraSongs(vocal).map((item) => item.song.id)).toContain("shainsky-antoshka");
+    expect(vocal.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
 
     const preschool = matchSongs(
       base({
@@ -816,10 +825,15 @@ describe("matching", () => {
         sheetFilter: "any",
       }),
     );
-    expect(primarySongs(adult).some((item) => !item.song.audienceHint)).toBe(true);
-    expect(primarySongs(adult).map((item) => item.song.id)).not.toContain("shainsky-antoshka");
-    expect(extraSongs(adult).map((item) => item.song.id)).toContain("shainsky-antoshka");
+    expect(primarySongs(adult).every((item) => item.song.audienceHint?.some((hint) => hint === "adult" || hint === "teen" || hint === "lateTeen"))).toBe(
+      true,
+    );
+    expect(primarySongs(adult).map((item) => item.song.id)).toContain("blanter-katyusha");
+    expect(primarySongs(adult).map((item) => item.song.id)).not.toContain("shainsky-vmeste");
+    expect(primarySongs(adult).map((item) => item.song.id)).not.toContain("betsy-sigma-boy");
+    expect(adult.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
     expect(adult.songs.map((item) => item.song.id)).toContain("blanter-katyusha");
+    expect(extraSongs(adult).some((item) => !item.song.audienceHint)).toBe(true);
 
     const kidsRequest = matchSongs(
       base({
@@ -856,5 +870,57 @@ describe("matching", () => {
       }),
     );
     expect(twelve.songs.map((item) => item.song.id)).toContain("betsy-sigma-boy");
+
+    const fifteen = matchSongs(
+      base({
+        age: "15",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+    );
+    expect(primarySongs(fifteen).every((item) => item.song.audienceHint?.includes("teen"))).toBe(true);
+    expect(primarySongs(fifteen).map((item) => item.song.id)).toContain("blanter-katyusha");
+    expect(primarySongs(fifteen).map((item) => item.song.id)).not.toContain("shainsky-vmeste");
+    expect(primarySongs(fifteen).map((item) => item.song.id)).not.toContain("betsy-sigma-boy");
+    expect(extraSongs(fifteen).map((item) => item.song.id)).toContain("shainsky-vmeste");
+    expect(fifteen.songs.every((item) => item.song.id !== "shainsky-antoshka")).toBe(true);
+    expect(primarySongs(fifteen).every((item) => item.audienceNote === AUDIENCE_PRIMARY_NOTE)).toBe(true);
+    expect(extraSongs(fifteen).find((item) => item.song.id === "shainsky-vmeste")?.audienceNote).toBe(AUDIENCE_OTHER_NOTE);
+
+    const adultUnknown = extraSongs(adult).find((item) => !item.song.audienceHint);
+    expect(adultUnknown).toBeDefined();
+    expect(adultUnknown?.audienceNote).toBe(AUDIENCE_UNKNOWN_NOTE);
+    expect(adult.songs.some((item) => item.song.id === "pugacheva-pozovi" || item.song.id === "splin-orbit")).toBe(true);
+
+    const lateTeenAll = {
+      ...CATALOG.find((song) => song.id === "pakhmutova-darite-radost")!,
+      id: "probe-late-teen-all",
+      audienceHint: ["lateTeen"] as AudienceHint[],
+    };
+    const lateTeenAdultLyrics = {
+      ...lateTeenAll,
+      id: "probe-late-teen-18",
+      editorialAge: { ...lateTeenAll.editorialAge, lyricAge: "18plus" as const },
+    };
+    const lateProbe = matchSongs(
+      base({
+        age: "15",
+        genres: ["pop"],
+        languages: ["ru"],
+        moods: ["surprise"],
+        purpose: "lessons",
+        sheetFilter: "any",
+      }),
+      [lateTeenAll, lateTeenAdultLyrics, CATALOG.find((song) => song.id === "blanter-katyusha")!],
+    );
+    expect(lateProbe.songs.map((item) => item.song.id)).not.toContain("probe-late-teen-18");
+    expect(primarySongs(lateProbe).map((item) => item.song.id)).not.toContain("probe-late-teen-all");
+    expect(extraSongs(lateProbe).map((item) => item.song.id)).toContain("probe-late-teen-all");
+    expect(extraSongs(lateProbe).find((item) => item.song.id === "probe-late-teen-all")?.audienceNote).toBe(
+      AUDIENCE_OTHER_NOTE,
+    );
   });
 });

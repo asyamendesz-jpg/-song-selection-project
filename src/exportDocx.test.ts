@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./data/catalog";
 import { buildPlaylistDocxBuffer, playlistDocxFilename } from "./logic/exportDocx";
-import { matchSongs } from "./logic/matching";
+import { isPreschoolRepertoire, matchSongs } from "./logic/matching";
 import { INITIAL_ANSWERS } from "./logic/quizFlow";
 import type { Answers } from "./types";
 
@@ -75,6 +75,8 @@ describe("Word export", () => {
     expect(xml).toContain("Соответствие песен вашему голосу не проверено");
     expect(xml).toContain("Вы указали возраст: 11 лет.");
     expect(xml).toContain("C4");
+    expect(xml).toContain("до первой октавы");
+    expect(xml).toContain("до второй октавы");
     expect(xml).toContain("не использовались для отбора");
     expect(xml).toContain(`В документ включено песен: ${result.matchedTotal}`);
     expect(xml).not.toContain("Показаны 5 из");
@@ -152,6 +154,7 @@ describe("Word export", () => {
     expect(kidsXml).toContain("Купить ноты");
     expect(kidsXml).toContain("Купить сборник с этой песней");
     expect(kidsXml).toContain("note-store.ru");
+    expect(kidsXml).toContain("страницы партитуры не просматривались");
     expect(kidsXml).toContain("Другая аранжировка");
     expect(kidsXml).not.toContain("Инструментальное переложение");
 
@@ -186,6 +189,8 @@ describe("Word export", () => {
     const xml = zipEntry(await buildPlaylistDocxBuffer(result, new Date(2026, 9, 31)), "word/document.xml");
     expect(xml).toContain(`В документ включено песен: ${result.matchedTotal}`);
     expect(xml).toContain("Текст требует проверки");
+    expect(xml).toContain("Возрастная аудитория в каталоге не указана");
+    expect(xml).toContain("не исключена как неподходящая");
     for (const item of result.songs) {
       expect(xml).toContain(item.song.title);
       expect(xml).toContain(item.song.artist);
@@ -313,7 +318,7 @@ describe("Word export", () => {
       "word/_rels/document.xml.rels",
     );
     expect(xml).toContain("Основная подборка");
-    expect(xml).toContain("Дополнительная подборка");
+    expect(xml).not.toContain("Дополнительная подборка");
     expect(xml).toContain("Чики-брики");
     expect(xml).toContain("Да-ри-да");
     expect(xml).toContain("Мы выбираем драйв");
@@ -332,7 +337,10 @@ describe("Word export", () => {
       sheetFilter: "any",
     });
     for (const count of [1, 5, 6]) {
-      const result = matchSongs(openAnswers, CATALOG.slice(0, count));
+      const result = matchSongs(
+        openAnswers,
+        CATALOG.filter((song) => !isPreschoolRepertoire(song)).slice(0, count),
+      );
       expect(result.songs).toHaveLength(count);
       const xml = zipEntry(await buildPlaylistDocxBuffer(result, new Date(2026, 9, 30)), "word/document.xml");
       expect(xml).toContain(`В документ включено песен: ${count}`);
